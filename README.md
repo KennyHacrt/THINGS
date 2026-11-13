@@ -21,7 +21,11 @@ npm run desktop
 
 In the desktop app, open **Make it yours → Desktop companion** to enable a transparent, always-on-top hand following your system cursor. It is click-through and leaves the real pointer visible for precision. Turn it off in the same settings. Closing THINGS also closes the companion.
 
-**Ctrl/Cmd + Shift + Space** brings the desktop app forward and toggles speech input. Browser and OS speech support varies; typing always works. Speech recognition may use your browser's speech service. Voice text is reviewed before submitting and never automatically starts a task.
+**Ctrl/Cmd + Shift + Space** summons a compact quick-task window. Type a task or choose a suggestion to send it to the main workspace. Press the shortcut again or Escape to close it. A running task cannot be replaced from this window.
+
+In **Make it yours → Hand cursor**, enable a pointing hand as your cursor inside THINGS. Pointer clicks still target the underlying controls. Touch input keeps its normal behavior. The desktop companion also reflects the main task's thinking, clicking, paused, and finished states, and walks while the system pointer moves.
+
+Browser and OS speech support varies; typing always works. Speech recognition may use your browser's speech service. Voice text is reviewed before submitting and never automatically starts a task.
 
 ## What works now
 
@@ -31,8 +35,9 @@ In the desktop app, open **Make it yours → Desktop companion** to enable a tra
 - Hand movement targets the actual workspace buttons; those buttons update the displayed data.
 - Pause, resume, cancel, replay, and manual workspace interaction.
 - Local completed-task history (up to 30 entries), persisted preferences, downloadable JSON results.
+- Markdown notes for all results. Afternoon plans export five local-time calendar events to an `.ics` file for a selected date; import the file in your calendar app to add them.
 - Browser speech-input integration with availability and permission error handling.
-- Electron shell with isolated preload, click-through desktop hand, and global speech shortcut.
+- Electron shell with isolated preload, click-through desktop hand, live activity updates, single-instance handling, and a global quick-task shortcut.
 - Reduced-motion support and optional completion sound.
 
 ## Prototype boundary
@@ -66,9 +71,12 @@ npm run preview
 | `src/styles.css` | Responsive interface and character motion |
 | `electron/main.cjs` | Desktop window, global shortcut and cursor companion |
 | `electron/preload.cjs` | Narrow companion/shortcut bridge |
+| `src/QuickTask.tsx` | Compact desktop quick-task window |
+| `src/Pointer.tsx` | Click-through pointing-hand cursor |
+| `src/results.ts` | Markdown notes and calendar-file exports |
 
 ## Next milestone
 
-Replace `createPlan()` with a real planner through a server-side agent adapter. Keep credentials out of the renderer and repository. Add a controlled browser/desktop execution adapter with observable actions, cancellation, and confirmation for consequential operations. Connect live task state to the desktop companion's poses. Package signed desktop installers once the agent loop is ready.
+Replace `createPlan()` with a real planner through a server-side agent adapter. Keep credentials out of the renderer and repository. Add a controlled browser/desktop execution adapter with observable actions, cancellation, and confirmation for consequential operations. Package signed desktop installers once the agent loop is ready.
 
 THINGS is an independent hackathon project and is not affiliated with Netflix, *Wednesday*, or the original Hands project.

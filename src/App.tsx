@@ -2,23 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowDownToLine, ArrowRight, ArrowUpRight, Check, ChevronRight, Clock3, Command, Hand as HandIcon, History, Layers3, Mic, MoreHorizontal, Pause, Play, Plus, RotateCcw, Settings2, Sparkles, Square, Sun, Utensils, Volume2, X } from 'lucide-react';
 import { Hand, type HandPose } from './Hand';
 import { createPlan, dinnerShortlist, readHistory, recipes, suggestions, type Plan, type SavedTask } from './engine';
+import './desktop';
+import { Pointer } from './Pointer';
+import { calendarResult, resultMarkdown, downloadFile, tabGroups, schedule } from './results';
 
 declare global {
   interface Window {
-    thingsDesktop?: { setCompanion: (enabled: boolean) => Promise<boolean>; onVoiceShortcut: (cb: () => void) => () => void };
     SpeechRecognition?: new () => Recognition;
     webkitSpeechRecognition?: new () => Recognition;
   }
 }
 type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort: () => void; onresult: ((event: { results: { [n: number]: { [n: number]: { transcript: string }; isFinal: boolean }; length: number } }) => void) | null; onerror: ((event: {error: string}) => void) | null; onend: (() => void) | null };
-type Preferences = { motion: boolean; sound: boolean; companion: boolean };
+type Preferences = { motion: boolean; sound: boolean; companion: boolean; cursor: boolean };
 type Status = 'idle' | 'running' | 'paused' | 'done' | 'cancelled';
 const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 function initialHistory() { try { return readHistory(localStorage.getItem('things.history')); } catch { return []; } }
-function initialPrefs(): Preferences { try { const p = JSON.parse(localStorage.getItem('things.preferences') || '{}'); return { motion: p.motion !== false, sound: p.sound === true, companion: false }; } catch { return {motion: true, sound: false, companion: false}; } }
+function initialPrefs(): Preferences { try { const p = JSON.parse(localStorage.getItem('things.preferences') || '{}') || {}; return { motion: p.motion !== false, sound: p.sound === true, cursor: p.cursor === true, companion: false }; } catch { return {motion: true, sound: false, cursor:false, companion: false}; } }
+function localDay() { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
 
 export default function App() {
-  const overlay = new URLSearchParams(window.location.search).has('companion');
   const [prompt, setPrompt] = useState('');
   const [plan, setPlan] = useState<Plan | null>(null);
   const [status, setStatus] = useState<Status>('idle');
@@ -36,22 +38,26 @@ export default function App() {
   const [handPosition, setHandPosition] = useState({ x: 70, y: 145 });
   const [handPose, setHandPose] = useState<HandPose>('idle');
   const [activeTarget, setActiveTarget] = useState('');
+  const [exportDay, setExportDay] = useState(localDay);
   const controller = useRef<AbortController | null>(null);
   const paused = useRef(false);
   const workspace = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const recognition = useRef<Recognition | null>(null);
   const prefsRef = useRef(prefs);
-  const voiceRef = useRef<() => void>(() => {});
+  const quickTaskRef = useRef<(prompt:string) => void>(() => {});
   const newTaskRef = useRef<() => void>(() => {});
   const isBusy = status === 'running' || status === 'paused';
 
   useEffect(() => {
     prefsRef.current = prefs;
-    try { localStorage.setItem('things.preferences', JSON.stringify({motion: prefs.motion, sound: prefs.sound})); } catch { /* Session preferences still work. */ }
+    try { localStorage.setItem('things.preferences', JSON.stringify({motion: prefs.motion, sound: prefs.sound, cursor:prefs.cursor})); } catch { /* Session preferences still work. */ }
   }, [prefs]);
   useEffect(() => () => { controller.current?.abort(); recognition.current?.abort(); }, []);
-  useEffect(() => window.thingsDesktop?.onVoiceShortcut(() => voiceRef.current()), []);
+  useEffect(() => window.thingsDesktop?.onQuickTask(value => quickTaskRef.current(value)), []);
+  useEffect(() => {
+    window.thingsDesktop?.updateActivity({pose: status === 'paused' ? 'idle' : handPose, label: status === 'paused' ? 'Taking five' : status === 'done' ? 'All yours ✧' : isBusy ? (step < 0 ? 'Thinking…' : `Step ${step + 1} of ${plan?.steps.length || 4}`) : 'Your little helper', motion:prefs.motion, busy:isBusy});
+  }, [status, handPose, prefs.motion, isBusy, step, plan]);
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); newTaskRef.current(); } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); }, []);
   useEffect(() => { if (!settings) return; const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSettings(false); }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [settings]);
 
@@ -69,7 +75,6 @@ export default function App() {
     recognition.current = rec;
     try { rec.start(); setListening(true); setMessage('Listening… Speak your request, then review it before sending.'); } catch { setListening(false); setMessage('Could not start the microphone. Try typing your request.'); }
   }
-  voiceRef.current = listen;
 
   function chime() {
     if (!prefsRef.current.sound) return;
@@ -106,6 +111,7 @@ export default function App() {
     }
     setStep(next.steps.length); setStatus('done'); setHandPose('success'); setActiveTarget(''); chime();
   }
+  quickTaskRef.current = value => { setSettings(false); void startTask(value); };
 
   function stopTask() { controller.current?.abort(); paused.current = false; setStatus('cancelled'); setHandPose('idle'); setActiveTarget(''); setMessage('Task stopped. Your workspace stays just as you left it.'); }
   function pauseTask() { paused.current = !paused.current; setStatus(paused.current ? 'paused' : 'running'); }
@@ -122,20 +128,19 @@ export default function App() {
   function downloadResult() {
     if (!plan || !saved) return;
     const data = { project: 'THINGS', mode: 'Local interactive demo', task: prompt, result: plan.scenario === 'recipes' ? dinnerShortlist() : plan.scenario === 'tabs' ? tabGroups : schedule };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `things-${plan.scenario}.json`; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadFile(JSON.stringify(data, null, 2), `things-${plan.scenario}.json`, 'application/json');
   }
+  function exportCalendar() { try { downloadFile(calendarResult(exportDay, crypto.randomUUID()), `things-afternoon-${exportDay}.ics`, 'text/calendar;charset=utf-8'); } catch { setMessage('Choose a valid date for your afternoon plan.'); } }
   async function toggleCompanion() {
     if (!window.thingsDesktop) { setMessage('The desktop companion is available in the Electron app. Run npm run desktop to try it.'); return; }
     try { const enabled = await window.thingsDesktop.setCompanion(!prefs.companion); setPrefs(p => ({...p, companion: enabled})); } catch { setMessage('The desktop companion could not be opened. Try again in the desktop app.'); }
   }
 
-  if (overlay) return <div className="desktop-hand"><Hand pose="idle" /></div>;
-
   return <div className={`app ${!prefs.motion ? 'reduce-motion' : ''}`}>
+    <Pointer enabled={prefs.cursor} motion={prefs.motion}/>
     <aside className="sidebar">
       <a className="wordmark" href="#" onClick={e => {e.preventDefault(); if (!isBusy) newTask();}} aria-label="THINGS home"><span className="brand-glyph"><HandIcon size={21}/></span>things<span className="brand-period">.</span></a>
-      <button className="new-task" onClick={newTask} disabled={isBusy}><Plus size={18}/> New thing <span>⌘ N</span></button>
+      <button className="new-task" onClick={newTask} disabled={isBusy}><Plus size={18}/> New thing <span>{navigator.platform.includes('Mac') ? '⌘ N' : 'Ctrl N'}</span></button>
       <nav aria-label="Main navigation">
         <button className={tab === 'workspace' ? 'nav-item active' : 'nav-item'} onClick={() => setTab('workspace')}><Sparkles size={18}/> My workspace <ChevronRight size={15}/></button>
         <button className={tab === 'history' ? 'nav-item active' : 'nav-item'} onClick={() => setTab('history')} disabled={isBusy}><History size={18}/> Things done <span className="count">{history.length}</span></button>
@@ -145,7 +150,7 @@ export default function App() {
       <div className="sidebar-bottom">
         <div className="companion-note"><div className="mini-hand"><Hand pose={isBusy ? 'think' : 'idle'}/></div><div><strong>Your little accomplice.</strong><p>Ready when you are.</p></div><span className="online-dot"/></div>
         <button className="nav-item settings-trigger" onClick={() => setSettings(true)}><Settings2 size={18}/> Make it yours <MoreHorizontal size={18}/></button>
-        <div className="build-label"><span>THINGS LAB</span><span>v0.1 · prototype</span></div>
+        <div className="build-label"><span>THINGS LAB</span><span>v0.2 · prototype</span></div>
       </div>
     </aside>
 
@@ -165,7 +170,7 @@ export default function App() {
 
         {!plan ? <section className="suggestions"><div className="section-heading"><h2>Small things. Big relief.</h2><span>TRY SOMETHING</span></div><div className="suggestion-grid">{suggestions.map(s => <button className="suggestion-card" key={s.scenario} onClick={() => void startTask(s.prompt)}><span className={`suggestion-icon ${s.scenario}`}>{s.scenario === 'recipes' ? <Utensils size={21}/> : s.scenario === 'tabs' ? <Layers3 size={21}/> : <Sun size={21}/>}</span><ArrowUpRight size={17} className="card-arrow"/><h3>{s.title}</h3><p>{s.detail}</p></button>)}</div><div className="demo-footnote"><Command size={14}/><span>Interactive sample workspaces · Your real apps stay untouched</span></div></section> :
         <section className="task-section" aria-label="Task progress"><div className="section-heading"><h2>{status === 'done' ? 'Another thing, done.' : status === 'paused' ? 'Taking a little breather.' : status === 'cancelled' ? 'Right where you left it.' : 'A little hand at work.'}</h2><div className="task-controls">{isBusy && <><button aria-label={status === 'paused' ? 'Resume task' : 'Pause task'} onClick={pauseTask}>{status === 'paused' ? <Play size={15}/> : <Pause size={15}/>}</button><button aria-label="Stop task" onClick={stopTask}><Square size={13}/></button></>}{!isBusy && <button onClick={() => void startTask(prompt)} aria-label="Replay task"><RotateCcw size={15}/></button>}</div></div>
-          <div className="task-layout"><div className="progress-panel"><div className="task-type"><span className={`status-dot ${status}`}/>{status === 'done' ? 'NICELY DONE' : status === 'paused' ? 'PAUSED' : status === 'cancelled' ? 'STOPPED' : 'WORKING ON IT'}</div><h3>{plan.title}</h3><ol className="steps">{plan.steps.map((s, i) => <li key={s.label} className={i < step || status === 'done' ? 'complete' : i === step ? 'current' : ''}><span className="step-number">{i < step || status === 'done' ? <Check size={12}/> : i + 1}</span><span>{s.label}</span></li>)}</ol><p className="workspace-disclosure">A real interaction with sample data in this workspace. AI and external app control are not connected yet.</p>{saved && <button className="download-button" onClick={downloadResult}><ArrowDownToLine size={15}/> Download result</button>}</div>
+          <div className="task-layout"><div className="progress-panel"><div className="task-type"><span className={`status-dot ${status}`}/>{status === 'done' ? 'NICELY DONE' : status === 'paused' ? 'PAUSED' : status === 'cancelled' ? 'STOPPED' : 'WORKING ON IT'}</div><h3>{plan.title}</h3><ol className="steps">{plan.steps.map((s, i) => <li key={s.label} className={i < step || status === 'done' ? 'complete' : i === step ? 'current' : ''}><span className="step-number">{i < step || status === 'done' ? <Check size={12}/> : i + 1}</span><span>{s.label}</span></li>)}</ol><p className="workspace-disclosure">A real interaction with sample data in this workspace. AI and external app control are not connected yet.</p>{saved && <div className="result-exports"><button className="download-button" onClick={downloadResult}><ArrowDownToLine size={15}/> Download JSON</button><button className="download-button" onClick={() => downloadFile(resultMarkdown(plan.scenario, plan.title), `things-${plan.scenario}.md`, 'text/markdown;charset=utf-8')}>Save as notes <ArrowDownToLine size={14}/></button>{plan.scenario === 'plan' && <div className="calendar-export"><label htmlFor="calendar-date">Put it on your calendar</label><input type="date" id="calendar-date" value={exportDay} onChange={e => setExportDay(e.target.value)} required/><button className="download-button" onClick={exportCalendar}>Export calendar (.ics) <ArrowDownToLine size={14}/></button><p>14:00–17:00 in your calendar's local time. Import the file to add the events.</p></div>}</div>}</div>
           <div className="workspace" ref={workspace}><div className="workspace-toolbar"><div className="window-dots"><i/><i/><i/></div><span>{plan.scenario === 'recipes' ? 'The little recipe book' : plan.scenario === 'tabs' ? 'A place for every tab' : 'An afternoon, thoughtfully'}<span className="sample-tag">SAMPLE</span></span><MoreHorizontal size={15}/></div>
             <div className="workspace-body"><div className="workspace-title"><div><span className="eyebrow">{plan.scenario === 'recipes' ? 'SOMETHING GOOD FOR TONIGHT' : plan.scenario === 'tabs' ? 'CLEAR TABS, CLEAR HEAD' : 'A LITTLE SPACE TO THINK'}</span><h3>{plan.scenario === 'recipes' ? 'Dinner, sorted.' : plan.scenario === 'tabs' ? 'Find your flow.' : 'Your afternoon.'}</h3></div><button id="workspace-open" className={`workspace-button ${opened ? 'checked' : ''} ${activeTarget === 'workspace-open' ? 'targeted' : ''}`} onClick={() => setOpened(true)}>{opened ? <Check size={13}/> : <Plus size={13}/>} {opened ? 'Opened' : 'Open'}</button></div>
             <div className="workspace-actions"><button id="workspace-filter" disabled={!opened} className={`filter-button ${filtered ? 'selected' : ''} ${activeTarget === 'workspace-filter' ? 'targeted' : ''}`} onClick={() => setFiltered(true)}>{plan.scenario === 'recipes' ? 'Vegetarian · Under 30 min' : plan.scenario === 'tabs' ? 'Group by purpose' : 'Focus + breaks'}{filtered && <Check size={12}/>}</button><button id="workspace-select" disabled={!filtered} className={`text-button ${activeTarget === 'workspace-select' ? 'targeted' : ''}`} onClick={() => setSelected(true)}>{selected ? 'Selected ✓' : plan.scenario === 'recipes' ? 'Pick three' : 'Select all'}</button></div>
@@ -178,10 +183,8 @@ export default function App() {
       <footer className="main-footer"><span>A little strange. A lot of help.</span><span>MADE TO LEND A HAND <span className="footer-star">✧</span></span></footer>
     </main>
 
-    {settings && <div className="modal-backdrop" onClick={() => setSettings(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}><button className="close-modal" aria-label="Close settings" onClick={() => setSettings(false)} autoFocus><X size={20}/></button><div className="eyebrow">A HAND THAT FEELS LIKE YOURS</div><h2 id="settings-title">The little details.</h2><p>Just enough personality. Just the way you like it.</p><Toggle icon={<Sparkles size={19}/>} title="Character motion" description="Crawling, tapping, and a little celebration." enabled={prefs.motion} onClick={() => setPrefs(p => ({...p, motion: !p.motion}))}/><Toggle icon={<Volume2 size={19}/>} title="A little sound" description="A soft chime when a thing is done." enabled={prefs.sound} onClick={() => setPrefs(p => ({...p, sound: !p.sound}))}/><Toggle icon={<HandIcon size={19}/>} title="Desktop companion" description={window.thingsDesktop ? 'Let Thing follow your cursor. Clicks pass through.' : 'Available in the Electron desktop app.'} enabled={prefs.companion} onClick={() => void toggleCompanion()}/><div className="settings-note"><strong>Honest little prototype.</strong><p>Tasks run on local sample data. Voice support depends on your browser and may use its speech service. No external computer-use agent is connected.</p></div>{message && <p className="notice" role="status">{message}</p>}</section></div>}
+    {settings && <div className="modal-backdrop" onClick={() => setSettings(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}><button className="close-modal" aria-label="Close settings" onClick={() => setSettings(false)} autoFocus><X size={20}/></button><div className="eyebrow">A HAND THAT FEELS LIKE YOURS</div><h2 id="settings-title">The little details.</h2><p>Just enough personality. Just the way you like it.</p><Toggle icon={<Sparkles size={19}/>} title="Character motion" description="Crawling, tapping, and a little celebration." enabled={prefs.motion} onClick={() => setPrefs(p => ({...p, motion: !p.motion}))}/><Toggle icon={<HandIcon size={19}/>} title="Hand cursor" description="Use your little hand as the pointer inside THINGS." enabled={prefs.cursor} onClick={() => setPrefs(p => ({...p, cursor:!p.cursor}))}/><Toggle icon={<Volume2 size={19}/>} title="A little sound" description="A soft chime when a thing is done." enabled={prefs.sound} onClick={() => setPrefs(p => ({...p, sound: !p.sound}))}/><Toggle icon={<HandIcon size={19}/>} title="Desktop companion" description={window.thingsDesktop ? 'Let Thing follow your cursor. Clicks pass through.' : 'Available in the Electron desktop app.'} enabled={prefs.companion} onClick={() => void toggleCompanion()}/><div className="settings-note"><strong>Honest little prototype.</strong><p>Tasks run on local sample data. Voice support depends on your browser and may use its speech service. No external computer-use agent is connected.</p></div>{message && <p className="notice" role="status">{message}</p>}</section></div>}
   </div>;
 }
 
 function Toggle({icon, title, description, enabled, onClick}: {icon: React.ReactNode; title:string; description:string; enabled:boolean; onClick:() => void}) { return <div className="preference"><span>{icon}</span><div><strong>{title}</strong><p>{description}</p></div><button className={`toggle ${enabled ? 'on' : ''}`} role="switch" aria-checked={enabled} aria-label={title} onClick={onClick}><span/></button></div>; }
-const tabGroups = [ {name: 'Research', tabs: ['Gesture interaction notes', 'Agent architecture guide']}, {name: 'Inspiration', tabs: ['Minimal interface collection', 'Character motion studies']}, {name: 'Tools', tabs: ['Project repository', 'Hackathon checklist']} ];
-const schedule = [ {time: '14:00 – 14:50', name: 'Make the important thing', type: 'Focus · 50 min'}, {time: '14:50 – 15:00', name: 'Stretch. Water. Breathe.', type: 'Break · 10 min'}, {time: '15:00 – 15:50', name: 'Keep the momentum', type: 'Focus · 50 min'}, {time: '15:50 – 16:00', name: 'A little fresh air', type: 'Break · 10 min'}, {time: '16:00 – 17:00', name: 'Review, refine, wrap up', type: 'Focus · 60 min'} ];

@@ -1,6 +1,6 @@
 {
   "name": "things-companion",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "An original animated hand companion for getting things done.",
   "type": "module",
