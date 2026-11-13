@@ -109,6 +109,7 @@ export default function App() {
       setHandPose('think');
       if (!(await delay(400))) return;
     }
+    if(workspace.current) setHandPosition({x: Math.max(10, workspace.current.clientWidth - 145), y: Math.max(75, workspace.current.clientHeight - 160)});
     setStep(next.steps.length); setStatus('done'); setHandPose('success'); setActiveTarget(''); chime();
   }
   quickTaskRef.current = value => { setSettings(false); void startTask(value); };
