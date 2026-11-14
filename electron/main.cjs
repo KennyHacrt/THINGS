@@ -13,9 +13,8 @@ const {LAYOUT,placement,ActionCursor}=require('./cursor.cjs');
 const path = require('node:path');
 app.disableHardwareAcceleration();
 let mainWindow, companionWindow, quickWindow, cursorTimer, dockWindow, tray;
-let deskEnabled=false,deskQueue=[],deskContext=[];
-let previousPoint, lastSent = '';
-let stillSince = Date.now();
+let deskEnabled=false,deskQueue=[],deskContext=[],deskStarting=false;
+let lastSent = '';
 let activity = {pose:'idle', label:'Your little helper', motion:true, busy:false};
 let agent, browserTools, desktopTools, credentials, vision;
 const actionCursor=new ActionCursor({toDip:p=>screen.screenToDipPoint(p),onChange:state=>{activity={...activity,cursorPhase:state.phase};positionCompanion();}});
@@ -36,8 +35,9 @@ function publishActivity(value = activity) {
 }
 function positionCompanion() {
   if (!companionWindow || companionWindow.isDestroyed()) return;
-  const point=actionCursor.point||screen.getCursorScreenPoint();
-  const b=placement(point);companionWindow.setPosition(b.x,b.y,false);
+  if(!actionCursor.point){companionWindow.hide();return;}
+  const point=actionCursor.point;
+  const b=placement(point);companionWindow.setPosition(b.x,b.y,false);if(!companionWindow.isVisible())companionWindow.showInactive();
   publishActivity({...activity,cursorPhase:actionCursor.phase});
 }
 function secureWindow(window) {
@@ -53,7 +53,7 @@ function openCompanion() {
   });
   companionWindow.setIgnoreMouseEvents(true, {forward:true}); secureWindow(companionWindow);
   companionWindow.loadFile(appFile, {query:{companion:'1'}});
-  companionWindow.once('ready-to-show', async() => {lastSent='';positionCompanion();companionWindow?.showInactive();});
+  companionWindow.once('ready-to-show', async() => {lastSent='';positionCompanion();});
   companionWindow.on('closed', () => {clearInterval(cursorTimer);cursorTimer=undefined;companionWindow=undefined;});
   cursorTimer=setInterval(positionCompanion,32);
 }
@@ -93,11 +93,11 @@ else {
     const isControl=event=>isMain(event)||isDock(event);
     credentials=createKeyStore({safeStorage,directory:app.getPath('userData')});
     browserTools=new BrowserTools({BrowserWindow});desktopTools=new DesktopTools({onPointer:event=>actionCursor.accept(event)});
-    vision=new VisionTools({browser:browserTools,desktop:desktopTools,desktopCapturer,onPointer:async({x,y,window,phase='move'})=>{const b=window.getContentBounds(),p=screen.dipToScreenPoint({x:Math.round(b.x+x),y:Math.round(b.y+y)});const handle=window.getNativeWindowHandle().readUInt32LE();await desktopTools.request('browser_pointer',{handle,x:p.x,y:p.y,scale:1,phase});}});
+    vision=new VisionTools({browser:browserTools,desktop:desktopTools,desktopCapturer,onPointer:async event=>{actionCursor.release();await browserTools.point(event);}});
 
     const send=event=>{if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send('things:agent-event',event);if(dockWindow&&!dockWindow.isDestroyed())dockWindow.webContents.send('things:desk-event',event);};
     const chat=(role,text,speak=false)=>{if(dockWindow&&!dockWindow.isDestroyed())dockWindow.webContents.send('things:desk-event',{type:'chat',role,text,speak});};
-    const setActivity=value=>{activity={...activity,...value};if(value.busy===false)actionCursor.release();publishActivity();};
+    const setActivity=value=>{activity={...activity,...value};if(value.busy===false){actionCursor.release();void browserTools.pointerVisible(false);}publishActivity();};
     const approve=(action,signal)=>new Promise(resolve=>{
       const id=randomUUID();let timer;
       const finish=allowed=>{clearTimeout(timer);signal.removeEventListener('abort',cancel);approvals.delete(id);send({type:'approval-resolved',approvalId:id,allowed});resolve(allowed);};
@@ -108,22 +108,24 @@ else {
       summonQuick();
     });
     agent=new Agent({tools:visionTools,credentials,onEvent:send,onActivity:setActivity,requestApproval:approve,
-      assess:async({args,prompt,signal})=>assessAction({frame:vision.getFrame(args),args,prompt,credentials,signal}),
+      assess:async({args,prompt,budget,signal})=>assessAction({frame:vision.getFrame(args),args,prompt,credentials,budget,signal}),
       execute:async(name,args,scope,signal)=>{
         if(name==='describe_action')return vision.describe(args.args);
         return vision.execute(name,args,scope,signal);
       },
     });
     async function workNext(){
-      if(agent.run||!deskQueue.length)return;
+      if(agent.run||deskStarting||!deskQueue.length)return;
+      deskStarting=true;
       const prompt=deskQueue.shift();
       const externalHandle=Number(process.argv.find(a=>a.startsWith('--things-browser-hwnd='))?.split('=')[1]);
       const handle=vision.desktopHandle||externalHandle||null;
+      try{
       if(externalHandle&&!vision.desktopHandle)await desktopTools.request('allow_browser',{handle:externalHandle});
       vision.setScope(handle);
-      try{const result=await agent.start(prompt,{mode:externalHandle?'desktop':'both',handle,conversation:true,externalBrowser:!!externalHandle},deskContext);deskContext=[...deskContext,{role:'user',content:prompt},{role:'assistant',content:result.result}].slice(-6);chat('assistant',result.result,true);}
+      const result=await agent.start(prompt,{mode:externalHandle?'desktop':'both',handle,conversation:true,externalBrowser:!!externalHandle},deskContext);deskContext=[...deskContext,{role:'user',content:prompt},{role:'assistant',content:result.result}].slice(-6);chat('assistant',result.result,true);}
       catch(e){deskContext=[...deskContext,{role:'user',content:prompt},{role:'assistant',content:'The previous task stopped without a verified completion: '+e.message}].slice(-6);if(!/abort|stopped/i.test(e.message))chat('assistant',e.message,true);}
-      finally{if(deskQueue.length)setTimeout(()=>void workNext(),100);}
+      finally{deskStarting=false;if(deskQueue.length)setTimeout(()=>void workNext(),100);}
     }
     ipcMain.handle('things:desk-enable',event=>{if(!isDock(event))throw new Error('Unavailable');if(!credentials.key())throw new Error('Connect Poe in settings first.');deskEnabled=true;openCompanion();return true;});
     ipcMain.handle('things:desk-speak',(event,text)=>{
@@ -133,7 +135,7 @@ else {
       if(/^(stop|cancel|stop working|cancel that|停止|停|取消|停低)[.!。]?$/i.test(text.trim())){deskQueue=[];agent.stop();browserTools.stop();chat('assistant','Stopped. What would you like instead?');return {accepted:true};}
       if(/^(pause|pause work|resume|continue|暫停|繼續)[.!。]?$/i.test(text.trim())&&agent.run){agent.pause();return {accepted:true};}
       if(deskQueue.length>=3)throw new Error('I have three requests queued. Let me finish one first.');
-      deskQueue.push(text);chat('assistant',agent.run?'Got it. I’ll do that next.':'On it. I’ll work right here.');void workNext();return {accepted:true};
+      deskQueue.push(text);if(agent.run||deskStarting)chat('assistant','Got it. I’ll do that next.');void workNext();return {accepted:true};
     });
     ipcMain.on('things:desk-settings',event=>{if(isDock(event))openSettings();});
     ipcMain.on('things:desk-hide',event=>{if(isDock(event))dockWindow.hide();});
@@ -161,7 +163,7 @@ else {
     });
     ipcMain.handle('things:agent-control',(event,action)=>{
       if(!isControl(event))throw new Error('Unavailable');
-      if(action==='stop'){voiceTools.close();agent.stop();browserTools.stop();desktopTools.close();return {stopped:true};}
+      if(action==='stop'){deskQueue=[];voiceTools.close();agent.stop();browserTools.stop();desktopTools.close();return {stopped:true};}
       if(action==='pause')return {paused:agent.pause()};throw new Error('Unknown task control.');
     });
     ipcMain.handle('things:agent-approve',(event,{id,allow}={})=>{if(!isControl(event)||typeof allow!=='boolean')return false;const resolve=approvals.get(id);if(!resolve)return false;resolve(allow);return true;});

@@ -16,3 +16,29 @@ test('declined input action does not execute',async()=>{const inputTool={type:'f
 test('cancellation after pending model response prevents tool execution',async()=>{let resolve;const {agent,calls,events}=create({complete:()=>new Promise(r=>resolve=r)});const task=agent.start('task',{mode:'browser'});await new Promise(r=>setImmediate(r));agent.stop();resolve({message:{role:'assistant',tool_calls:[{id:'x',function:{name:'browser_inspect',arguments:'{}'}}]},usage:{}});await assert.rejects(task,/stopped/);assert.equal(calls.length,0);assert.ok(events.some(e=>e.type==='stopped'));});
 test('browser tool refuses local schemes, private hosts and embedded credentials',()=>{for(const url of ['file:///etc/passwd','javascript:alert(1)','http://localhost','http://127.0.0.1','http://[::1]','http://printer.local','https://user:pass@example.com'])assert.throws(()=>safeUrl(url));assert.equal(safeUrl('https://example.com'),'https://example.com/');});
 test('Poe authentication failures never echo response body or supplied key',async()=>{const key='test-sensitive-placeholder';await assert.rejects(completion({key,model:'test',messages:[],fetchImpl:async()=>({ok:false,status:401,json:async()=>({error:key})})}),error=>!error.message.includes(key)&&/rejected/.test(error.message));});
+
+
+test('spoken search cannot complete as a chatbot answer without verified actions',async()=>{
+ const {agent,events,calls}=create({complete:async()=>({message:{role:'assistant',content:'Here are papers from memory'},usage:{}})});
+ await assert.rejects(agent.start('Find research papers about RAG',{mode:'desktop',conversation:true}),/No computer action was executed/);
+ assert.equal(calls.length,0);assert.ok(!events.some(e=>e.type==='completed'));
+});
+test('spoken task requires tools until navigation succeeds; greetings stay conversational',async()=>{
+ const toolChoices=[];let turn=0;
+ const {agent,calls}=create({tools:()=>[{type:'function',function:{name:'browser_search',parameters:{type:'object',properties:{query:{type:'string'}},required:['query']}}}],complete:async({toolChoice})=>{toolChoices.push(toolChoice);return {message:turn++===0?{role:'assistant',tool_calls:[{id:'s',function:{name:'browser_search',arguments:'{"query":"RAG papers"}'}}]}:{role:'assistant',content:'Observed search results.'},usage:{}};}});
+ await agent.start('Search for RAG papers',{mode:'browser',conversation:true});assert.deepEqual(toolChoices,['required',undefined]);assert.equal(calls.length,1);
+});
+
+test('input conflict pauses execution and notifies before retry can continue',async()=>{
+ const tool={type:'function',function:{name:'computer',parameters:{type:'object',properties:{target:{type:'string'},action:{type:'string'},frame:{type:'string'},x:{type:'number'},y:{type:'number'},reason:{type:'string'}},required:['target','action','frame']}}};let turn=0,agent;const events=[];
+ agent=new Agent({credentials:{config:()=>({model:'test'}),key:()=> 'test-only'},tools:()=>[tool],onActivity:()=>{},onEvent:e=>{events.push(e);if(e.type==='conflict')setImmediate(()=>agent.pause());},requestApproval:async()=>true,assess:async()=> 'ROUTINE',complete:async()=>({message:turn++===0?{role:'assistant',tool_calls:[{id:'1',function:{name:'computer',arguments:'{"target":"desktop","action":"click","frame":"f1","x":1,"y":1,"reason":"Click test"}'}}]}:{role:'assistant',content:'The input was not executed.'},usage:{}}),execute:async()=>{throw Error('CONFLICT: Another window is active.');}});
+ await agent.start('Check the selected window',{mode:'desktop',conversation:true});assert.ok(events.some(e=>e.type==='conflict'));assert.ok(events.some(e=>e.type==='resumed'));
+});
+
+test('shared planning and safety-check budget blocks the next request before transmission',async()=>{
+ const {completion}=require('../electron/poe.cjs');const budget={calls:0,maxCalls:2};let sent=0;
+ const fetchImpl=async()=>{sent++;return {ok:true,json:async()=>({choices:[{message:{content:'OK'}}]})};};
+ await completion({key:'test-only',model:'gpt-4.1-mini',messages:[],budget,fetchImpl});
+ await completion({key:'test-only',model:'gpt-4.1-mini',messages:[],budget,maxTokens:80,fetchImpl});
+ await assert.rejects(completion({key:'test-only',model:'gpt-4.1-mini',messages:[],budget,fetchImpl}),/AI call limit reached/);assert.equal(sent,2);
+});

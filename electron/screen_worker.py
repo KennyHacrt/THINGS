@@ -16,7 +16,9 @@ def move_pointer(destination,phase='move'):
     for i in range(1,25):
         t=i/24;ease=t*t*(3-2*t)
         point=(round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease))
-        win32api.SetCursorPos(point);cursor_event(point,'move');time.sleep(.014)
+        current=win32api.GetCursorPos()
+        if i>1 and (abs(current[0]-previous[0])+abs(current[1]-previous[1])>4):raise InputConflict('CONFLICT: Your mouse moved during the desktop action. THINGS paused.')
+        win32api.SetCursorPos(point);previous=point;cursor_event(point,'move');time.sleep(.014)
     cursor_event(destination,phase)
 
 selected_browser=None
@@ -49,20 +51,19 @@ def windows():
             if win32gui.GetWindowText(hwnd): output.append(metadata(hwnd))
         except Exception: pass
     win32gui.EnumWindows(visit,None);return output
+class InputConflict(ValueError): pass
+last_agent_tick=None
+class LASTINPUTINFO(ctypes.Structure): _fields_=[('cbSize',W.UINT),('dwTime',W.DWORD)]
+def input_tick():
+    info=LASTINPUTINFO();info.cbSize=ctypes.sizeof(info)
+    ctypes.windll.user32.GetLastInputInfo(ctypes.byref(info));return info.dwTime
 def focus(handle):
-    if win32gui.IsIconic(handle): win32gui.ShowWindow(handle,win32con.SW_RESTORE)
-    current=win32api.GetCurrentThreadId();foreground=win32gui.GetForegroundWindow();attached=[]
-    message=W.MSG();ctypes.windll.user32.PeekMessageW(ctypes.byref(message),None,0,0,0)
-    try:
-        for other in {win32process.GetWindowThreadProcessId(handle)[0],win32process.GetWindowThreadProcessId(foreground)[0] if foreground else current}:
-            if other!=current and ctypes.windll.user32.AttachThreadInput(current,other,True):attached.append(other)
-        win32gui.BringWindowToTop(handle);win32gui.SetForegroundWindow(handle)
-    except Exception: pass
-    finally:
-        for other in attached:ctypes.windll.user32.AttachThreadInput(current,other,False)
-    time.sleep(.07)
     active=win32gui.GetForegroundWindow()
-    if active!=handle and not win32gui.IsChild(handle,active): raise ValueError('Focus the selected application, then retry. Input was not sent.')
+    if active!=handle and not win32gui.IsChild(handle,active):
+        raise InputConflict('CONFLICT: You are using another window. THINGS paused before sending desktop input. Focus its task window and say resume when ready.')
+    tick=input_tick();now=ctypes.windll.kernel32.GetTickCount()&0xffffffff
+    if tick!=last_agent_tick and (now-tick)&0xffffffff<1200:
+        raise InputConflict('CONFLICT: Recent keyboard or mouse activity detected. THINGS paused to avoid competing with you. Say resume when ready.')
 class MI(ctypes.Structure): _fields_=[('dx',W.LONG),('dy',W.LONG),('mouseData',W.DWORD),('dwFlags',W.DWORD),('time',W.DWORD),('extra',ctypes.c_size_t)]
 class KI(ctypes.Structure): _fields_=[('vk',W.WORD),('scan',W.WORD),('flags',W.DWORD),('time',W.DWORD),('extra',ctypes.c_size_t)]
 class IU(ctypes.Union): _fields_=[('mi',MI),('ki',KI)]
@@ -89,7 +90,7 @@ def key(name):
     finally:
         for code in reversed(codes): win32api.keybd_event(code,0,2,0)
 def execute(action,args):
-    global selected_browser
+    global selected_browser,last_agent_tick
     if action=='allow_browser':
         handle=int(args['handle'])
         if not win32gui.IsWindow(handle) or executable(handle)!='chrome.exe': raise ValueError('Select a Chrome demo window.')
@@ -153,6 +154,7 @@ def execute(action,args):
             focused_points[handle]=destination
             for _ in range(2 if kind=='double_click' else 1):
                 cursor_event(destination,'down');time.sleep(.07)
+                if win32api.GetCursorPos()!=destination:raise InputConflict('CONFLICT: Your mouse moved before the click. No click was sent.')
                 win32api.mouse_event(2,0,0,0,0);time.sleep(.06);win32api.mouse_event(4,0,0,0,0)
                 cursor_event(destination,'release');time.sleep(.08)
     elif kind=='type':
@@ -167,6 +169,7 @@ def execute(action,args):
         if not isinstance(delta,int) or abs(delta)>1500: raise ValueError('Invalid scroll amount.')
         win32api.mouse_event(0x0800,0,0,-round(delta/100)*120,0)
     else: raise ValueError('Unsupported action.')
+    last_agent_tick=input_tick()
     return {'executed':True}
 for line in sys.stdin:
     request={}

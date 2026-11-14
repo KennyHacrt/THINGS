@@ -55,8 +55,8 @@ Desktop tools capture the selected application's window with a window-scoped Win
 
 ## Your little hand
 
-- **Make it yours → Desktop companion** enables the transparent, click-through hand following your cursor. It reflects live thinking, input, approval, paused, stopped, and finished states.
-- **Hand cursor** uses the index fingertip as its hotspot. During agent actions, it approaches the actual target, presses at the click coordinate, and stays anchored to the focused field while typing. Worker input events drive the overlay; physical screen coordinates are converted to display coordinates once, including Windows scaling.
+- **Make it yours → Desktop companion** enables THINGS’ transparent, click-through task cursor. It follows agent input targets, never your personal mouse. It reflects live thinking, input, approval, paused, stopped, and finished states.
+- **Hand cursor** uses the index fingertip as its hotspot. During agent actions, it approaches the actual target, presses at the click coordinate, and stays anchored to the focused field while typing. Browser input uses Chromium’s separate input channel without moving the Windows mouse or taking focus. Native desktop input pauses and notifies you if another window has focus or recent human input is detected. Worker input events drive the overlay; physical screen coordinates are converted to display coordinates once, including Windows scaling.
 - **Ctrl/Cmd + Shift + Space** opens a compact quick-task window. Its requests route to the real agent in the main workspace. It listens immediately and submits recognized speech automatically. A running task cannot be replaced by a quick task.
 - **Ctrl/Cmd + Alt + Space** stops the running agent from any application.
 - Character motion respects reduced-motion settings; completion sound is optional.
@@ -80,3 +80,9 @@ npm run build
 `electron/agent.cjs` owns the screenshot/model/action loop. `vision-tools.cjs` captures browser/desktop frames and maps coordinate actions. `vision-policy.cjs` checks input risk. `poe.cjs` handles the fixed-endpoint provider connection; `key-store.cjs` owns encrypted credential storage. `browser.cjs` creates the isolated task browser. `desktop-tools.cjs` manages the bounded JSON-lines Win32 worker in `screen_worker.py`. `src/LiveAgent.tsx` renders task scope, live screenshots, approvals, observations, results, and history. `voice.cjs` and `voice_worker.py` run local, in-memory speech transcription; `src/voice.ts` captures PCM, detects a pause, and automatically hands the transcript to the real task flow. Original sample mode lives in `src/engine.ts` and `src/App.tsx`.
 
 THINGS is independent and is not affiliated with Poe, Netflix, *Wednesday*, or the original Hands project.
+
+
+Voice playback suspends recognition and discards in-flight transcripts until playback ends plus a short echo tail. Listening then resumes automatically. Spoken execution requests cannot complete with a remembered text-only answer: they require verified tool execution; failures are reported visibly. Public sites can still block automation or require sign-in. The browser cursor is independent; Windows native desktop applications share the system pointer, so conflicts pause rather than compete with the user.
+
+
+The default Poe bot is `gpt-4.1-mini`. Planning and screenshot action checks share a 20-call task budget. All provider calls also count toward a 30-call app-session cap. Reaching either cap stops before another request is sent. Calls are capped, not a guaranteed USD charge; Poe bills actual tokens. Output is limited to 700 tokens per planning request and 80 for action checks, and only the latest screenshot is retained in the model context. There is no automatic premium-model fallback.

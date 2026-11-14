@@ -38,6 +38,6 @@ export function useVoice(onTranscript:(text:string)=>void,onError:(text:string)=
     }catch(e){if(mounted.current&&id===generation.current){setState('idle');error.current((e as Error).name==='NotAllowedError'?'Microphone access is needed to speak a task. Enable it and try again.':`Could not start microphone: ${(e as Error).message}`);}}
   }
   function cancel(){generation.current++;session.current?.finish(true);streamRef.current?.getTracks().forEach(t=>t.stop());streamRef.current=null;setState('idle');}
-  function suspend(){generation.current++;session.current?.finish(true,true);setState('idle');}
+  function suspend(){generation.current++;session.current?.finish(true,true);setDraft('');setLevel(0);setState('idle');}
   return {state,draft,level,start,cancel,suspend};
 }

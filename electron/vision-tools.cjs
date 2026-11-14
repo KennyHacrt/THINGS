@@ -19,6 +19,7 @@ class VisionTools {
     if(target==='browser'){
       const w=this.browser.ensure();safeUrl(w.webContents.getURL());
       await this.settle(w.webContents);
+      await this.browser.pointerVisible?.(false);
       try{image=await w.webContents.capturePage(undefined,{stayAwake:true});}
       catch{
         let shot;
@@ -26,6 +27,7 @@ class VisionTools {
         catch{shot=await w.webContents.debugger.sendCommand('Page.captureScreenshot',{format:'jpeg',quality:85,fromSurface:false,captureBeyondViewport:false});}
         image=require('electron').nativeImage.createFromBuffer(Buffer.from(shot.data,'base64'));
       }
+      await this.browser.pointerVisible?.(true);
       const metrics=await w.webContents.debugger.sendCommand('Page.getLayoutMetrics');
       metadata={url:w.webContents.getURL(),title:w.webContents.getTitle(),viewport:{width:metrics.cssVisualViewport.clientWidth,height:metrics.cssVisualViewport.clientHeight}};
     }else{
