@@ -9,7 +9,7 @@ class DesktopTools {
   start() {
     if(this.worker)return;
     if(!this.available())throw new Error('Install Windows desktop support with npm run desktop:setup.');
-    const worker=spawn(path.join(__dirname,'..','.desktop-env','Scripts','python.exe'),['-u',path.join(__dirname,'screen_worker.py')],{windowsHide:true,stdio:['pipe','pipe','pipe']});this.worker=worker;
+    const worker=spawn(path.join(__dirname,'..','.desktop-env','Scripts','python.exe'),['-u',path.join(__dirname,'screen_worker.py'),'--owner-pid',String(process.pid)],{windowsHide:true,stdio:['pipe','pipe','pipe']});this.worker=worker;
     readline.createInterface({input:worker.stdout}).on('line',line=>{try{const r=JSON.parse(line);const p=this.pending.get(r.id);if(p){clearTimeout(p.timer);this.pending.delete(r.id);r.error?p.reject(new Error(r.error)):p.resolve(r.result);}}catch{}});
     worker.stderr.on('data',()=>{});
     worker.on('error',()=>{if(this.worker===worker)this.close();});worker.on('exit',()=>{if(this.worker!==worker)return;this.worker=null;for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(new Error('Desktop helper stopped.'));}this.pending.clear();});

@@ -24,6 +24,14 @@ Open **Make it yours → A little intelligence**. Enter your Poe API key and a t
 
 Credentials are encrypted with Electron `safeStorage` using the current OS user, stored in the application's user-data directory, and never returned to the renderer. The API endpoint is fixed to `https://api.poe.com/v1/chat/completions`. No API key belongs in `.env`, source, GitHub, or a screenshot.
 
+## Desktop conversation
+
+THINGS starts as a small, always-on-top assistant at the bottom right of the Windows desktop. The workspace is available through Settings/history and the tray; it does not need to stay open.
+
+Press **Ctrl + Shift + Space** or choose **Start conversation** once. The microphone stays active until you mute it. A live waveform follows microphone level. Local partial transcription revises a visible draft while you speak; a short pause submits the final text automatically. The assistant replies in the conversation, speaks a short response, and continues working. You can speak again while a task runs; additional requests are queued. Say **stop**, **pause**, or **resume**, or use the visible controls. This build runs one computer task at a time; separate video takes must not be presented as a parallel-task benchmark.
+
+The original stitched hand follows the real Windows pointer and changes pose during input. Browser coordinate actions also move the real pointer before clicking. Existing personal browsers are not attached automatically. For an explicitly supplied demo Chrome window, the Windows build accepts `--things-browser-hwnd=<HWND>`; this authorizes only that exact Chrome window. The optional `--listen` flag starts a requested voice session immediately. Keep unrelated tabs out of that window. Screenshots use a window-scoped Win32 capture; they do not capture the whole monitor or depend on accessibility trees.
+
 ## Real tasks
 
 1. Choose **Real tasks** and select **Browser**, **Desktop**, or **Both**.
@@ -43,7 +51,7 @@ Examples:
 
 The task browser has an isolated session and does not attach to your existing Chrome or Edge tabs. The visual model reads screenshots and chooses pixel coordinates; Chromium input events perform the actions. Every screenshot has a frame ID and dimensions. Out-of-bounds coordinates, stale frames and changed page/window geometry are rejected. There is no model-provided JavaScript execution tool. Password input, file downloads, popup windows and browser permissions are unavailable to the agent. Local/private URL literals and credential-bearing URLs are rejected. A software rendering path and Chromium capture fallback keep browser screenshots working on Windows GPU drivers.
 
-Desktop tools capture the selected application's window with Electron's desktop capturer, then map screenshot coordinates to its visible physical bounds for Win32 input. They do not rely on an accessibility element tree. A fresh Notepad task opens a uniquely named file under the ignored `.things-local/notes` directory. If you switch away from that note, the task refuses to continue on another note. Existing windows require explicit selection. Screenshots can include any other visible tabs or content within the selected app; choose the intended window before sharing. Terminal, password-manager, security, and external-browser applications are outside the desktop adapter's scope.
+Desktop tools capture the selected application's window with a window-scoped Win32 renderer, then map screenshot coordinates to its visible physical bounds for Win32 input. They do not rely on an accessibility element tree. A fresh Notepad task opens a uniquely named file under the ignored `.things-local/notes` directory. If you switch away from that note, the task refuses to continue on another note. Existing windows require explicit selection. Screenshots can include any other visible tabs or content within the selected app; choose the intended window before sharing. Terminal, password-manager and security apps remain outside the desktop adapter's scope. External Chrome requires explicit selection as described above.
 
 ## Your little hand
 
@@ -52,7 +60,7 @@ Desktop tools capture the selected application's window with Electron's desktop 
 - **Ctrl/Cmd + Shift + Space** opens a compact quick-task window. Its requests route to the real agent in the main workspace. It listens immediately and submits recognized speech automatically. A running task cannot be replaced by a quick task.
 - **Ctrl/Cmd + Alt + Space** stops the running agent from any application.
 - Character motion respects reduced-motion settings; completion sound is optional.
-- Closing the main app stops tasks and closes its task browser, quick window, and companion. Other desktop apps are left open.
+- Closing the settings workspace hides it. Use **Quit THINGS** from the tray to stop tasks and exit; other desktop apps are left open.
 
 ## Sample demo mode
 

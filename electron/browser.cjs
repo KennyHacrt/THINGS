@@ -9,7 +9,8 @@ class BrowserTools{
   constructor({BrowserWindow}){this.BrowserWindow=BrowserWindow;this.window=null;}
   ensure(){
     if(this.window&&!this.window.isDestroyed())return this.window;
-    const w=new this.BrowserWindow({width:1050,height:820,title:'THINGS · Task browser',webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:false,partition:'things-task-browser'}});this.window=w;
+    const area=require('electron').screen.getPrimaryDisplay().workArea;
+    const w=new this.BrowserWindow({x:area.x+20,y:area.y+24,width:Math.max(650,area.width-445),height:area.height-48,title:'THINGS · Task browser',webPreferences:{nodeIntegration:false,contextIsolation:true,sandbox:true,backgroundThrottling:false,partition:'things-task-browser'}});this.window=w;
     w.webContents.session.setPermissionRequestHandler((_w,_p,cb)=>cb(false));
     w.webContents.session.on('will-download',event=>event.preventDefault());
     w.webContents.setWindowOpenHandler(({url})=>{try{const target=safeUrl(url);setImmediate(()=>{if(!w.isDestroyed())void w.loadURL(target).catch(()=>{});});}catch{}return {action:'deny'};});

@@ -2,7 +2,12 @@ import type { HandPose } from './Hand';
 
 export type CompanionActivity = { pose: HandPose; label: string; motion: boolean; busy: boolean };
 export type DesktopBridge = {
-  transcribeVoice:(audio:string)=>Promise<{text:string;language:string}>;
+  deskSpeak:(text:string)=>Promise<{accepted:boolean}>;
+  deskEnable:()=>Promise<boolean>;
+  deskSettings:()=>void;
+  deskHide:()=>void;
+  onDeskEvent:(callback:(event:AgentEvent & {role?:string;text?:string;speak?:boolean})=>void)=>()=>void;
+  transcribeVoice:(audio:string,partial?:boolean)=>Promise<{text:string;language:string}>;
   aiConfig:()=>Promise<{configured:boolean;model:string;desktopAvailable:boolean}>;
   aiSave:(value:{apiKey?:string;model:string})=>Promise<{configured:boolean;model:string}>;
   aiTest:()=>Promise<{ok:boolean;model:string;message:string}>;

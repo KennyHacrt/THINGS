@@ -1,5 +1,14 @@
 # Changes
 
+## 0.6.0
+
+- Replaced the default workspace launch with a compact desktop conversation panel and tray entry. Settings and history stay available.
+- Added continuous voice sessions, local live draft revisions, audio-level waveforms, spoken replies, conversation context, and queued follow-ups.
+- Added bounded model-input spelling normalization and an explicit screenshot-ID requirement.
+- Added exact-window opt-in for the user-provided Chrome, window-scoped Win32 screenshots, and smooth real-pointer movement.
+- Kept final commitments behind approval. The script-aligned demonstration uses separate search/preparation takes, with no bookings, orders, payments or user-file operations.
+
+
 ## 0.5.0
 
 - Added local Whisper speech input with pause detection and automatic task submission.

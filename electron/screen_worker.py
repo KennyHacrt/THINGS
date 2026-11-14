@@ -1,11 +1,13 @@
 """Bounded Win32 input transport for THINGS' screenshot-driven agent. No eval/shell."""
-import sys, os, json, time, uuid, subprocess, ctypes
+import sys, os, json, time, uuid, subprocess, ctypes, io, base64
 from ctypes import wintypes as W
-import win32gui, win32api, win32process, win32con
+import win32gui, win32api, win32process, win32con, win32ui
 try: ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
 except Exception: pass
 sys.stdin.reconfigure(encoding='utf-8'); sys.stdout.reconfigure(encoding='utf-8')
 fresh={}
+selected_browser=None
+OWNER_PID=int(sys.argv[sys.argv.index('--owner-pid')+1]) if '--owner-pid' in sys.argv else os.getppid()
 ctypes.windll.kernel32.QueryFullProcessImageNameW.argtypes=[W.HANDLE,W.DWORD,W.LPWSTR,ctypes.POINTER(W.DWORD)]
 blocked={'chrome.exe','msedge.exe','firefox.exe','cmd.exe','powershell.exe','pwsh.exe','windowsterminal.exe','taskmgr.exe','credentialuibroker.exe','consent.exe','keepass.exe','1password.exe','electron.exe','codex.exe'}
 def executable(hwnd):
@@ -20,7 +22,7 @@ def metadata(handle):
     handle=int(handle)
     if not win32gui.IsWindow(handle) or not win32gui.IsWindowVisible(handle): raise ValueError('Target window is not visible.')
     title=win32gui.GetWindowText(handle);exe=executable(handle)
-    if exe in blocked or any(s in title.lower() for s in ('password manager','windows security','sign in','lock screen')): raise ValueError('This application is outside the desktop scope.')
+    if (exe in blocked and not(exe=='chrome.exe' and handle==selected_browser)) or any(s in title.lower() for s in ('password manager','windows security','sign in','lock screen')): raise ValueError('This application is outside the desktop scope.')
     if handle in fresh and fresh[handle] not in title: raise ValueError('The task-specific note is no longer active. Switch back before continuing.')
     if win32gui.IsIconic(handle): raise ValueError('Restore the target window before capturing it.')
     rect=W.RECT()
@@ -66,7 +68,7 @@ def literal(text):
         batch=events[start:start+200];array=(INPUT*len(batch))(*batch)
         if ctypes.windll.user32.SendInput(len(batch),array,ctypes.sizeof(INPUT))!=len(batch): raise ValueError('Windows rejected input to this application.')
 def key(name):
-    mapping={'Enter':[13],'Tab':[9],'Escape':[27],'Backspace':[8],'ArrowDown':[40],'ArrowUp':[38],'ArrowLeft':[37],'ArrowRight':[39],'Home':[36],'End':[35],'PageDown':[34],'PageUp':[33],'Control+A':[17,65],'Control+F':[17,70]}
+    mapping={'Enter':[13],'Tab':[9],'Escape':[27],'Backspace':[8],'ArrowDown':[40],'ArrowUp':[38],'ArrowLeft':[37],'ArrowRight':[39],'Home':[36],'End':[35],'PageDown':[34],'PageUp':[33],'Control+A':[17,65],'Control+F':[17,70],'Control+L':[17,76]}
     if name not in mapping: raise ValueError('Unsupported key.')
     codes=mapping[name]
     try:
@@ -74,7 +76,28 @@ def key(name):
     finally:
         for code in reversed(codes): win32api.keybd_event(code,0,2,0)
 def execute(action,args):
+    global selected_browser
+    if action=='allow_browser':
+        handle=int(args['handle'])
+        if not win32gui.IsWindow(handle) or executable(handle)!='chrome.exe': raise ValueError('Select a Chrome demo window.')
+        title=win32gui.GetWindowText(handle)
+        if not any(x in title.lower() for x in ['new tab','新分頁','新标签页','arxiv','google','flights','keeta','x.com','tokyo','skyscanner']): raise ValueError('Start from a fresh demo tab or arXiv page.')
+        selected_browser=handle
+        return metadata(handle)
     if action=='list': return windows()
+    if action=='browser_pointer':
+        handle=int(args['handle'])
+        if win32process.GetWindowThreadProcessId(handle)[1] != OWNER_PID:
+            raise ValueError('Pointer target must belong to the THINGS process.')
+        scale=float(args.get('scale',1))
+        if not 0.5 <= scale <= 4: raise ValueError('Invalid screen scale.')
+        destination=(round(float(args['x'])*scale),round(float(args['y'])*scale))
+        origin=win32api.GetCursorPos()
+        for i in range(1,25):
+            t=i/24;ease=t*t*(3-2*t)
+            win32api.SetCursorPos((round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease)))
+            time.sleep(.014)
+        return {'moved':True}
     if action=='open':
         app=args.get('app')
         if app not in ('notepad','calculator'): raise ValueError('Unsupported application.')
@@ -96,6 +119,18 @@ def execute(action,args):
         raise ValueError('Could not identify the new app. Select its window manually.')
     m=metadata(args['handle'])
     if action=='metadata': return m
+    if action=='capture':
+        from PIL import Image
+        handle=m['handle'];left,top,right,bottom=win32gui.GetWindowRect(handle);width=right-left;height=bottom-top
+        dc=win32gui.GetWindowDC(handle);src=win32ui.CreateDCFromHandle(dc);dest=src.CreateCompatibleDC();bitmap=win32ui.CreateBitmap();bitmap.CreateCompatibleBitmap(src,width,height);dest.SelectObject(bitmap)
+        try:
+            if not ctypes.windll.user32.PrintWindow(W.HWND(handle),dest.GetSafeHdc(),2): raise ValueError('The selected window could not be captured.')
+            image=Image.frombuffer('RGB',(width,height),bitmap.GetBitmapBits(True),'raw','BGRX',0,1)
+            b=m['bounds'];x=max(0,b['x']-left);y=max(0,b['y']-top);image=image.crop((x,y,x+b['width'],y+b['height']))
+            output=io.BytesIO();image.save(output,format='PNG')
+            return {**m,'image':'data:image/png;base64,'+base64.b64encode(output.getvalue()).decode('ascii')}
+        finally:
+            dest.DeleteDC();src.DeleteDC();win32gui.ReleaseDC(handle,dc);win32gui.DeleteObject(bitmap.GetHandle())
     if action!='input': raise ValueError('Unknown operation.')
     expected=args.get('expected')
     if expected!=m['bounds']: raise ValueError('Window moved or resized. Capture a new screenshot.')
@@ -103,7 +138,12 @@ def execute(action,args):
     if kind in ('click','double_click','move'):
         x=args.get('x');y=args.get('y')
         if not isinstance(x,(int,float)) or not isinstance(y,(int,float)) or not(0<=x<1 and 0<=y<1): raise ValueError('Invalid normalized coordinates.')
-        win32api.SetCursorPos((round(m['bounds']['x']+x*m['bounds']['width']),round(m['bounds']['y']+y*m['bounds']['height'])))
+        destination=(round(m['bounds']['x']+x*m['bounds']['width']),round(m['bounds']['y']+y*m['bounds']['height']))
+        origin=win32api.GetCursorPos()
+        for i in range(1,25):
+            t=i/24;ease=t*t*(3-2*t)
+            win32api.SetCursorPos((round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease)))
+            time.sleep(.014)
         if kind!='move':
             for _ in range(2 if kind=='double_click' else 1):
                 win32api.mouse_event(2,0,0,0,0);win32api.mouse_event(4,0,0,0,0);time.sleep(.07)

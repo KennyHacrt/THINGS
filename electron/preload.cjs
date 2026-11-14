@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('thingsDesktop', {
-  transcribeVoice:audio=>ipcRenderer.invoke('things:voice-transcribe',audio),
+  transcribeVoice:(audio,partial=false)=>ipcRenderer.invoke('things:voice-transcribe',audio,partial),
+  deskSpeak:text=>ipcRenderer.invoke('things:desk-speak',text),
+  deskEnable:()=>ipcRenderer.invoke('things:desk-enable'),
+  deskSettings:()=>ipcRenderer.send('things:desk-settings'),
+  deskHide:()=>ipcRenderer.send('things:desk-hide'),
+  onDeskEvent:callback=>{const listener=(_e,data)=>callback(data);ipcRenderer.on('things:desk-event',listener);return()=>ipcRenderer.removeListener('things:desk-event',listener);},
   aiConfig:()=>ipcRenderer.invoke('things:ai-config'),
   aiSave:value=>ipcRenderer.invoke('things:ai-save',value),
   aiTest:()=>ipcRenderer.invoke('things:ai-test'),

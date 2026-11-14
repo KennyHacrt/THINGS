@@ -140,7 +140,7 @@ export default function App() {
       <div className="sidebar-bottom">
         <div className="companion-note"><div className="mini-hand"><Hand pose={isBusy ? 'think' : 'idle'}/></div><div><strong>Your little accomplice.</strong><p>Ready when you are.</p></div><span className="online-dot"/></div>
         <button className="nav-item settings-trigger" onClick={() => setSettings(true)}><Settings2 size={18}/> Make it yours <MoreHorizontal size={18}/></button>
-        <div className="build-label"><span>THINGS LAB</span><span>v0.5 · voice to action</span></div>
+        <div className="build-label"><span>THINGS LAB</span><span>v0.6 · desktop companion</span></div>
       </div>
     </aside>
 

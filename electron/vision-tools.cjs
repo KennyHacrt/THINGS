@@ -2,7 +2,7 @@ const {safeUrl}=require('./browser.cjs');
 const schema=(name,description,properties,required=Object.keys(properties))=>({type:'function',function:{name,description,parameters:{type:'object',properties,required,additionalProperties:false}}});
 const str={type:'string'};
 function visionTools(scope){
-  const tools=[schema('computer','Look at a screenshot or operate by its pixel coordinates. Every action returns a new screenshot. Use the latest frame ID. Coordinates refer to the returned image, not OS pixels.',{target:{type:'string',enum:scope.mode==='browser'?['browser']:scope.mode==='desktop'?['desktop']:['browser','desktop']},action:{type:'string',enum:['screenshot','click','double_click','type','key','scroll','move']},reason:str,frame:str,x:{type:'number'},y:{type:'number'},text:str,key:str,scrollY:{type:'integer'},replace:{type:'boolean'}},['target','action','reason'])];
+  const tools=[schema('computer','Look at a screenshot or operate by its pixel coordinates. Every action returns a new screenshot. For screenshot use frame an empty string; for all other actions copy the latest frame ID exactly. Coordinates refer to the returned image, not OS pixels.',{target:{type:'string',enum:scope.mode==='browser'?['browser']:scope.mode==='desktop'?['desktop']:['browser','desktop']},action:{type:'string',enum:['screenshot','click','double_click','type','key','scroll','move']},reason:str,frame:str,x:{type:'number'},y:{type:'number'},text:str,key:{type:'string',enum:['Enter','Tab','Escape','Backspace','ArrowDown','ArrowUp','ArrowLeft','ArrowRight','Home','End','PageDown','PageUp','Control+A','Control+F','Control+L']},scrollY:{type:'integer'},replace:{type:'boolean'}},['target','action','reason','frame'])];
   if(scope.mode!=='desktop')tools.push(schema('browser_open','Open a public URL in THINGS and return its screenshot.',{url:str}),schema('browser_search','Search the web and return a screenshot of the actual results.',{query:str}));
   if(scope.mode!=='browser')tools.push(schema('desktop_open','Open Calculator or a task-specific Notepad file and return its screenshot.',{app:{type:'string',enum:['calculator','notepad']}}));
   return tools;
@@ -31,10 +31,8 @@ class VisionTools {
     }else{
       if(!this.desktopHandle)throw new Error('Choose a desktop window or call desktop_open first.');
       metadata=await this.desktop.request('metadata',{handle:this.desktopHandle});
-      const sources=await this.desktopCapturer.getSources({types:['window'],thumbnailSize:{width:1440,height:1100},fetchWindowIcons:false});
-      const source=sources.find(s=>s.id.split(':')[1]===String(this.desktopHandle));
-      if(!source||source.thumbnail.isEmpty())throw new Error('The selected window cannot be captured. Restore it and try again.');
-      image=source.thumbnail;
+      const captured=await this.desktop.request('capture',{handle:this.desktopHandle});
+      image=require('electron').nativeImage.createFromDataURL(captured.image);
       metadata=await this.desktop.request('metadata',{handle:this.desktopHandle});
       const size=image.getSize();
       if(Math.abs(size.width/size.height-metadata.bounds.width/metadata.bounds.height)>.08)throw new Error('Window capture and geometry are not aligned yet. Take a new screenshot after the window finishes opening.');
@@ -45,7 +43,7 @@ class VisionTools {
     this.frames.set(target,frame);return frame;
   }
   async settle(contents){const deadline=Date.now()+12000;while(contents.isLoadingMainFrame()&&Date.now()<deadline)await new Promise(r=>setTimeout(r,120));await new Promise(r=>setTimeout(r,250));}
-  getFrame(args){const frame=this.frames.get(args.target);if(!frame||args.frame!==frame.id)throw new Error('Stale screenshot. Take a new screenshot before acting.');return frame;}
+  getFrame(args){const frame=this.frames.get(args.target);if(!frame||args.frame!==frame.id)throw new Error(`Stale screenshot. Latest frame is ${frame?.id||'none'}; received ${String(args.frame)}. Capture a new screenshot and copy its id exactly.`);return frame;}
   describe(args){const f=this.getFrame(args);return {application:f.title,target:args.target,url:f.url,action:args.action,reason:args.reason,...(args.text?{text:args.text}:{}),...(args.key?{key:args.key}:{}),...(Number.isFinite(args.x)?{x:args.x,y:args.y}:{})};}
   async execute(name,args,scope,signal){
     if(signal.aborted)throw new Error('Task stopped.');
@@ -76,7 +74,8 @@ class VisionTools {
       const cdp=(method,params)=>w.webContents.debugger.sendCommand(method,params);
       if(normalized){
         const x=normalized.x*frame.viewport.width,y=normalized.y*frame.viewport.height;
-        this.onPointer?.({x,y,window:w});
+        await this.onPointer?.({x,y,window:w});
+        if(signal.aborted)throw new Error('Task stopped.');
         await cdp('Input.dispatchMouseEvent',{type:'mouseMoved',x,y});
         if(args.action!=='move')for(let clickCount=1;clickCount<=(args.action==='double_click'?2:1);clickCount++)for(const type of ['mousePressed','mouseReleased'])await cdp('Input.dispatchMouseEvent',{type,x,y,button:'left',clickCount});
       }else if(args.action==='type'){
