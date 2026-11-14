@@ -11,3 +11,6 @@ dist/
 .things-local/
 verification-private/
 __pycache__/
+
+poe-settings.json
+poe-settings.json.tmp
