@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('thingsDesktop', {
+  transcribeVoice:audio=>ipcRenderer.invoke('things:voice-transcribe',audio),
   aiConfig:()=>ipcRenderer.invoke('things:ai-config'),
   aiSave:value=>ipcRenderer.invoke('things:ai-save',value),
   aiTest:()=>ipcRenderer.invoke('things:ai-test'),

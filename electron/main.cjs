@@ -2,6 +2,8 @@ const { app, BrowserWindow, ipcMain, screen, globalShortcut, Menu, safeStorage, 
 const {createKeyStore}=require('./key-store.cjs');
 const {completion}=require('./poe.cjs');
 const {Agent}=require('./agent.cjs');
+const {VoiceTools}=require('./voice.cjs');
+const voiceTools=new VoiceTools();
 const {BrowserTools,safeUrl}=require('./browser.cjs');
 const {DesktopTools}=require('./desktop-tools.cjs');
 const {VisionTools,visionTools}=require('./vision-tools.cjs');
@@ -61,7 +63,7 @@ function openCompanion() {
 }
 function summonQuick() {
   if (!quickWindow || quickWindow.isDestroyed()) {
-    quickWindow = new BrowserWindow({width:620,height:325,frame:false,resizable:false,alwaysOnTop:true,skipTaskbar:true,show:false,backgroundColor:'#f6f5f2',webPreferences:{preload,contextIsolation:true,nodeIntegration:false,sandbox:true}});
+    quickWindow = new BrowserWindow({width:620,height:410,frame:false,resizable:false,alwaysOnTop:true,skipTaskbar:true,show:false,backgroundColor:'#f6f5f2',webPreferences:{preload,contextIsolation:true,nodeIntegration:false,sandbox:true}});
     secureWindow(quickWindow); quickWindow.loadFile(appFile,{query:{quick:'1'}});
     quickWindow.once('ready-to-show', () => {quickWindow?.center();quickWindow?.show();});
     quickWindow.on('closed', () => {quickWindow=undefined;});
@@ -97,6 +99,7 @@ else {
         return vision.execute(name,args,scope,signal);
       },
     });
+    ipcMain.handle('things:voice-transcribe',(event,audio)=>{if(!isMain(event)&&event.sender!==quickWindow?.webContents)throw new Error('Unavailable');if(agent?.run)throw new Error('Finish or stop the current task before speaking another.');return voiceTools.transcribe(audio);});
     ipcMain.handle('things:ai-config',event=>{if(!isMain(event))throw new Error('Unavailable');return {...credentials.config(),desktopAvailable:desktopTools.available()};});
     ipcMain.handle('things:ai-save',(event,value)=>{if(!isMain(event)||agent.run)throw new Error('Settings cannot change during a task.');return credentials.save(value||{});});
     ipcMain.handle('things:ai-test',async event=>{
@@ -120,12 +123,12 @@ else {
     });
     ipcMain.handle('things:agent-control',(event,action)=>{
       if(!isMain(event))throw new Error('Unavailable');
-      if(action==='stop'){agent.stop();browserTools.stop();desktopTools.close();return {stopped:true};}
+      if(action==='stop'){voiceTools.close();agent.stop();browserTools.stop();desktopTools.close();return {stopped:true};}
       if(action==='pause')return {paused:agent.pause()};throw new Error('Unknown task control.');
     });
     ipcMain.handle('things:agent-approve',(event,{id,allow}={})=>{if(!isMain(event)||typeof allow!=='boolean')return false;const resolve=approvals.get(id);if(!resolve)return false;resolve(allow);return true;});
     mainWindow.webContents.session.setPermissionRequestHandler((contents,permission,callback,details) => {
-      callback(contents === mainWindow?.webContents && permission === 'media' && !details.mediaTypes?.includes('video'));
+      callback([mainWindow?.webContents,quickWindow?.webContents].includes(contents) && permission === 'media' && !details.mediaTypes?.includes('video'));
     });
     ipcMain.handle('things:set-companion', (event,enabled) => {
       if(event.sender !== mainWindow?.webContents || typeof enabled !== 'boolean') return false;
@@ -147,9 +150,9 @@ else {
     });
     ipcMain.on('things:close-quick',event => {if(event.sender === quickWindow?.webContents) quickWindow.close();});
     globalShortcut.register('CommandOrControl+Shift+Space',summonQuick);
-    globalShortcut.register('CommandOrControl+Alt+Space',()=>{agent?.stop();browserTools?.stop();desktopTools?.close();});
-    mainWindow.on('closed', () => {agent?.stop();desktopTools?.close();browserTools?.close();mainWindow=undefined;closeCompanion();if(quickWindow && !quickWindow.isDestroyed()) quickWindow.close();});
+    globalShortcut.register('CommandOrControl+Alt+Space',()=>{voiceTools.close();agent?.stop();browserTools?.stop();desktopTools?.close();});
+    mainWindow.on('closed', () => {voiceTools.close();agent?.stop();desktopTools?.close();browserTools?.close();mainWindow=undefined;closeCompanion();if(quickWindow && !quickWindow.isDestroyed()) quickWindow.close();});
   });
 }
 app.on('window-all-closed', () => app.quit());
-app.on('will-quit', () => {globalShortcut.unregisterAll();closeCompanion();});
+app.on('will-quit', () => {voiceTools.close();globalShortcut.unregisterAll();closeCompanion();});

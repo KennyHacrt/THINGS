@@ -1,5 +1,15 @@
 # Changes
 
+## 0.5.0
+
+- Added local Whisper speech input with pause detection and automatic task submission.
+- The global quick-task shortcut now starts listening immediately; typing and Send are optional.
+- Added bounded 30-second PCM capture, microphone error states, local model setup, and recognizer shutdown.
+- Added source links to real-task results.
+
+Validation: 22 tests and production build; a prerecorded spoken research request passed through the production microphone capture, pause detection, local transcription and automatic task dispatch, then the real Poe agent opened three arXiv pages and returned summaries with links. The recorded command was synthetic audio provided through Chromium's test microphone, not a physical-microphone recording. Physical microphone acoustics and non-English recognition have not been verified.
+
+
 ## 0.4.0
 
 - Added a real Poe visual agent: screenshots, model-selected coordinates, input, and fresh screenshot verification.

@@ -6,15 +6,9 @@ import './desktop';
 import { Pointer } from './Pointer';
 import {LiveAgent,type LiveAgentHandle} from './LiveAgent';
 import {PoeSettings} from './PoeSettings';
+import {useVoice} from './voice';
 import { calendarResult, resultMarkdown, downloadFile, tabGroups, schedule } from './results';
 
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => Recognition;
-    webkitSpeechRecognition?: new () => Recognition;
-  }
-}
-type Recognition = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; abort: () => void; onresult: ((event: { results: { [n: number]: { [n: number]: { transcript: string }; isFinal: boolean }; length: number } }) => void) | null; onerror: ((event: {error: string}) => void) | null; onend: (() => void) | null };
 type Preferences = { motion: boolean; sound: boolean; companion: boolean; cursor: boolean };
 type Status = 'idle' | 'running' | 'paused' | 'done' | 'cancelled';
 const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
@@ -39,7 +33,8 @@ export default function App() {
   const [settings, setSettings] = useState(false);
   const [prefs, setPrefs] = useState(initialPrefs);
   const [message, setMessage] = useState('');
-  const [listening, setListening] = useState(false);
+  const voice=useVoice(text=>{setPrompt(text);setMessage('Heard you. Getting to work...');void startTask(text);},setMessage);
+  const listening=voice.state==='listening';
   const [handPosition, setHandPosition] = useState({ x: 70, y: 145 });
   const [handPose, setHandPose] = useState<HandPose>('idle');
   const [activeTarget, setActiveTarget] = useState('');
@@ -48,7 +43,6 @@ export default function App() {
   const paused = useRef(false);
   const workspace = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
-  const recognition = useRef<Recognition | null>(null);
   const prefsRef = useRef(prefs);
   const quickTaskRef = useRef<(prompt:string) => void>(() => {});
   const newTaskRef = useRef<() => void>(() => {});
@@ -58,7 +52,7 @@ export default function App() {
     prefsRef.current = prefs;
     try { localStorage.setItem('things.preferences', JSON.stringify({motion: prefs.motion, sound: prefs.sound, cursor:prefs.cursor})); } catch { /* Session preferences still work. */ }
   }, [prefs]);
-  useEffect(() => () => { controller.current?.abort(); recognition.current?.abort(); }, []);
+  useEffect(() => () => { controller.current?.abort(); voice.cancel(); }, []);
   useEffect(() => window.thingsDesktop?.onQuickTask(value => quickTaskRef.current(value)), []);
   useEffect(() => {
     if(liveBusy)return;
@@ -67,20 +61,7 @@ export default function App() {
   useEffect(() => { const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); newTaskRef.current(); } }; window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); }, []);
   useEffect(() => { if (!settings) return; const close = (event: KeyboardEvent) => { if (event.key === 'Escape') setSettings(false); }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [settings]);
 
-  function listen() {
-    if (listening) { recognition.current?.stop(); return; }
-    const API = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!API) { setMessage('Voice input is unavailable in this browser. You can type your request below.'); input.current?.focus(); return; }
-    const rec = new API();
-    rec.lang = navigator.language || 'en-US';
-    rec.interimResults = true;
-    rec.continuous = false;
-    rec.onresult = e => { let text = ''; for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript; setPrompt(text); };
-    rec.onerror = e => { setListening(false); setMessage(e.error === 'not-allowed' ? 'Microphone access was declined. Type your request instead.' : `Voice input stopped (${e.error}). You can still type your request.`); };
-    rec.onend = () => setListening(false);
-    recognition.current = rec;
-    try { rec.start(); setListening(true); setMessage('Listening… Speak your request, then review it before sending.'); } catch { setListening(false); setMessage('Could not start the microphone. Try typing your request.'); }
-  }
+  function listen() { void voice.start(); }
 
   function chime() {
     if (!prefsRef.current.sound) return;
@@ -124,7 +105,7 @@ export default function App() {
 
   function stopTask() { controller.current?.abort(); paused.current = false; setStatus('cancelled'); setHandPose('idle'); setActiveTarget(''); setMessage('Task stopped. Your workspace stays just as you left it.'); }
   function pauseTask() { paused.current = !paused.current; setStatus(paused.current ? 'paused' : 'running'); }
-  function newTask() { controller.current?.abort(); recognition.current?.abort(); setStatus('idle'); setPlan(null); setPrompt(''); setStep(-1); setOpened(false); setFiltered(false); setSelected(false); setSaved(false); setMessage(''); setActiveTarget(''); setTab('workspace'); setHandPose('idle'); input.current?.focus(); }
+  function newTask() { controller.current?.abort(); voice.cancel(); setStatus('idle'); setPlan(null); setPrompt(''); setStep(-1); setOpened(false); setFiltered(false); setSelected(false); setSaved(false); setMessage(''); setActiveTarget(''); setTab('workspace'); setHandPose('idle'); input.current?.focus(); }
   newTaskRef.current = () => { if (!isBusy && !settings) newTask(); };
 
   function saveTask() {
@@ -159,7 +140,7 @@ export default function App() {
       <div className="sidebar-bottom">
         <div className="companion-note"><div className="mini-hand"><Hand pose={isBusy ? 'think' : 'idle'}/></div><div><strong>Your little accomplice.</strong><p>Ready when you are.</p></div><span className="online-dot"/></div>
         <button className="nav-item settings-trigger" onClick={() => setSettings(true)}><Settings2 size={18}/> Make it yours <MoreHorizontal size={18}/></button>
-        <div className="build-label"><span>THINGS LAB</span><span>v0.4 · visual agent</span></div>
+        <div className="build-label"><span>THINGS LAB</span><span>v0.5 · voice to action</span></div>
       </div>
     </aside>
 
@@ -172,7 +153,7 @@ export default function App() {
           <form onSubmit={e => {e.preventDefault(); void startTask();}}>
             <label className="sr-only" htmlFor="task-prompt">What can I take off your hands?</label>
             <textarea id="task-prompt" ref={input} value={prompt} disabled={isBusy} onChange={e => setPrompt(e.target.value)} placeholder="What can I take off your hands?" rows={2} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) {e.preventDefault(); void startTask();} }}/>
-            <div className="composer-bottom"><button type="button" className={`voice-button ${listening ? 'recording' : ''}`} onClick={listen} disabled={isBusy} aria-label={listening ? 'Stop listening' : 'Use voice input'}><Mic size={17}/><span>{listening ? 'Listening…' : 'Say it out loud'}</span></button><div className="composer-right"><span className="enter-hint">↵ to send</span><button className="send-button" type="submit" disabled={isBusy || !prompt.trim()}>Give it a Thing <ArrowRight size={17}/></button></div></div>
+            <div className="composer-bottom"><button type="button" className={`voice-button ${listening ? 'recording' : ''}`} onClick={listen} disabled={isBusy||voice.state==='transcribing'} aria-label={listening ? 'Stop listening' : 'Use voice input'}><Mic size={17}/><span>{listening ? 'Listening… pause to send' : voice.state==='transcribing' ? 'Understanding your voice…' : 'Say it out loud · auto-send'}</span></button><div className="composer-right"><span className="enter-hint">↵ to send</span><button className="send-button" type="submit" disabled={isBusy || !prompt.trim()}>Give it a Thing <ArrowRight size={17}/></button></div></div>
           </form>
         </section>
         {message && <p className="notice" role="status">{message}<button aria-label="Dismiss message" onClick={() => setMessage('')}><X size={14}/></button></p>}
@@ -193,7 +174,7 @@ export default function App() {
       <div hidden={tab!=='workspace'||runMode!=='live'}><LiveAgent ref={liveRef} onBusy={setLiveBusy}/></div><footer className="main-footer"><span>A little strange. A lot of help.</span><span>MADE TO LEND A HAND <span className="footer-star">✧</span></span></footer>
     </main>
 
-    {settings && <div className="modal-backdrop" onClick={() => setSettings(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}><button className="close-modal" aria-label="Close settings" onClick={() => setSettings(false)} autoFocus><X size={20}/></button><div className="eyebrow">A HAND THAT FEELS LIKE YOURS</div><h2 id="settings-title">The little details.</h2><p>Just enough personality. Just the way you like it.</p><Toggle icon={<Sparkles size={19}/>} title="Character motion" description="Crawling, tapping, and a little celebration." enabled={prefs.motion} onClick={() => setPrefs(p => ({...p, motion: !p.motion}))}/><Toggle icon={<HandIcon size={19}/>} title="Hand cursor" description="Use your little hand as the pointer inside THINGS." enabled={prefs.cursor} onClick={() => setPrefs(p => ({...p, cursor:!p.cursor}))}/><Toggle icon={<Volume2 size={19}/>} title="A little sound" description="A soft chime when a thing is done." enabled={prefs.sound} onClick={() => setPrefs(p => ({...p, sound: !p.sound}))}/><Toggle icon={<HandIcon size={19}/>} title="Desktop companion" description={window.thingsDesktop ? 'Let Thing follow your cursor. Clicks pass through.' : 'Available in the Electron desktop app.'} enabled={prefs.companion} onClick={() => void toggleCompanion()}/><PoeSettings/><div className="settings-note"><strong>Your little hand, your control.</strong><p>Real tasks use Poe and isolated browser / selected Windows app tools. Input actions ask for approval. Sample demo mode runs entirely on bundled data. Voice availability depends on your browser.</p></div>{message && <p className="notice" role="status">{message}</p>}</section></div>}
+    {settings && <div className="modal-backdrop" onClick={() => setSettings(false)}><section className="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" onClick={e => e.stopPropagation()}><button className="close-modal" aria-label="Close settings" onClick={() => setSettings(false)} autoFocus><X size={20}/></button><div className="eyebrow">A HAND THAT FEELS LIKE YOURS</div><h2 id="settings-title">The little details.</h2><p>Just enough personality. Just the way you like it.</p><Toggle icon={<Sparkles size={19}/>} title="Character motion" description="Crawling, tapping, and a little celebration." enabled={prefs.motion} onClick={() => setPrefs(p => ({...p, motion: !p.motion}))}/><Toggle icon={<HandIcon size={19}/>} title="Hand cursor" description="Use your little hand as the pointer inside THINGS." enabled={prefs.cursor} onClick={() => setPrefs(p => ({...p, cursor:!p.cursor}))}/><Toggle icon={<Volume2 size={19}/>} title="A little sound" description="A soft chime when a thing is done." enabled={prefs.sound} onClick={() => setPrefs(p => ({...p, sound: !p.sound}))}/><Toggle icon={<HandIcon size={19}/>} title="Desktop companion" description={window.thingsDesktop ? 'Let Thing follow your cursor. Clicks pass through.' : 'Available in the Electron desktop app.'} enabled={prefs.companion} onClick={() => void toggleCompanion()}/><PoeSettings/><div className="settings-note"><strong>Your little hand, your control.</strong><p>Real tasks use Poe and isolated browser / selected Windows app tools. Final commitments ask for approval. Sample demo mode runs entirely on bundled data. Voice is transcribed locally; spoken tasks start automatically after a short silence.</p></div>{message && <p className="notice" role="status">{message}</p>}</section></div>}
   </div>;
 }
 
