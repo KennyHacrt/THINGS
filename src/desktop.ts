@@ -1,6 +1,6 @@
 import type { HandPose } from './Hand';
 
-export type CompanionActivity = { pose: HandPose; label: string; motion: boolean; busy: boolean };
+export type CompanionActivity = { cursorPhase?:'point'|'down'|'type'; pose: HandPose; label: string; motion: boolean; busy: boolean };
 export type DesktopBridge = {
   deskSpeak:(text:string)=>Promise<{accepted:boolean}>;
   deskEnable:()=>Promise<boolean>;

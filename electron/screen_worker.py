@@ -6,6 +6,19 @@ try: ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
 except Exception: pass
 sys.stdin.reconfigure(encoding='utf-8'); sys.stdout.reconfigure(encoding='utf-8')
 fresh={}
+focused_points={}
+def cursor_event(point,phase):
+    print(json.dumps({'event':'pointer','x':point[0],'y':point[1],'phase':phase}),flush=True)
+def move_pointer(destination,phase='move'):
+    origin=win32api.GetCursorPos()
+    if abs(origin[0]-destination[0])+abs(origin[1]-destination[1])<=1:
+        win32api.SetCursorPos(destination);cursor_event(destination,phase);return
+    for i in range(1,25):
+        t=i/24;ease=t*t*(3-2*t)
+        point=(round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease))
+        win32api.SetCursorPos(point);cursor_event(point,'move');time.sleep(.014)
+    cursor_event(destination,phase)
+
 selected_browser=None
 OWNER_PID=int(sys.argv[sys.argv.index('--owner-pid')+1]) if '--owner-pid' in sys.argv else os.getppid()
 ctypes.windll.kernel32.QueryFullProcessImageNameW.argtypes=[W.HANDLE,W.DWORD,W.LPWSTR,ctypes.POINTER(W.DWORD)]
@@ -92,11 +105,7 @@ def execute(action,args):
         scale=float(args.get('scale',1))
         if not 0.5 <= scale <= 4: raise ValueError('Invalid screen scale.')
         destination=(round(float(args['x'])*scale),round(float(args['y'])*scale))
-        origin=win32api.GetCursorPos()
-        for i in range(1,25):
-            t=i/24;ease=t*t*(3-2*t)
-            win32api.SetCursorPos((round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease)))
-            time.sleep(.014)
+        move_pointer(destination,args.get('phase','move'))
         return {'moved':True}
     if action=='open':
         app=args.get('app')
@@ -139,17 +148,17 @@ def execute(action,args):
         x=args.get('x');y=args.get('y')
         if not isinstance(x,(int,float)) or not isinstance(y,(int,float)) or not(0<=x<1 and 0<=y<1): raise ValueError('Invalid normalized coordinates.')
         destination=(round(m['bounds']['x']+x*m['bounds']['width']),round(m['bounds']['y']+y*m['bounds']['height']))
-        origin=win32api.GetCursorPos()
-        for i in range(1,25):
-            t=i/24;ease=t*t*(3-2*t)
-            win32api.SetCursorPos((round(origin[0]+(destination[0]-origin[0])*ease),round(origin[1]+(destination[1]-origin[1])*ease)))
-            time.sleep(.014)
+        move_pointer(destination)
         if kind!='move':
+            focused_points[handle]=destination
             for _ in range(2 if kind=='double_click' else 1):
-                win32api.mouse_event(2,0,0,0,0);win32api.mouse_event(4,0,0,0,0);time.sleep(.07)
+                cursor_event(destination,'down');time.sleep(.07)
+                win32api.mouse_event(2,0,0,0,0);time.sleep(.06);win32api.mouse_event(4,0,0,0,0)
+                cursor_event(destination,'release');time.sleep(.08)
     elif kind=='type':
         text=args.get('text')
         if not isinstance(text,str) or len(text)>6000: raise ValueError('Text is too long.')
+        if handle in focused_points:move_pointer(focused_points[handle],'type')
         if args.get('replace'):key('Control+A')
         literal(text)
     elif kind=='key': key(args.get('key'))

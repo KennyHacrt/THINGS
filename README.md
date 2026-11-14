@@ -56,7 +56,7 @@ Desktop tools capture the selected application's window with a window-scoped Win
 ## Your little hand
 
 - **Make it yours → Desktop companion** enables the transparent, click-through hand following your cursor. It reflects live thinking, input, approval, paused, stopped, and finished states.
-- **Hand cursor** replaces the pointer inside THINGS with an original pointing/tapping character.
+- **Hand cursor** uses the index fingertip as its hotspot. During agent actions, it approaches the actual target, presses at the click coordinate, and stays anchored to the focused field while typing. Worker input events drive the overlay; physical screen coordinates are converted to display coordinates once, including Windows scaling.
 - **Ctrl/Cmd + Shift + Space** opens a compact quick-task window. Its requests route to the real agent in the main workspace. It listens immediately and submits recognized speech automatically. A running task cannot be replaced by a quick task.
 - **Ctrl/Cmd + Alt + Space** stops the running agent from any application.
 - Character motion respects reduced-motion settings; completion sound is optional.

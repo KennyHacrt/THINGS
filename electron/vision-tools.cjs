@@ -12,7 +12,7 @@ function point(args,frame){
   return {x:args.x/frame.width,y:args.y/frame.height};
 }
 class VisionTools {
-  constructor({browser,desktop,desktopCapturer,onPointer}){Object.assign(this,{browser,desktop,desktopCapturer,onPointer});this.frames=new Map();this.desktopHandle=null;this.frameNumber=0;}
+  constructor({browser,desktop,desktopCapturer,onPointer}){Object.assign(this,{browser,desktop,desktopCapturer,onPointer});this.frames=new Map();this.desktopHandle=null;this.frameNumber=0;this.browserPointer=null;}
   setScope(handle){this.frames.clear();this.desktopHandle=handle||null;this.desktop.setScope(handle);}
   async capture(target){
     let image,metadata;
@@ -74,13 +74,17 @@ class VisionTools {
       const cdp=(method,params)=>w.webContents.debugger.sendCommand(method,params);
       if(normalized){
         const x=normalized.x*frame.viewport.width,y=normalized.y*frame.viewport.height;
-        await this.onPointer?.({x,y,window:w});
+        this.browserPointer={x,y};
+        await this.onPointer?.({x,y,window:w,phase:'move'});
         if(signal.aborted)throw new Error('Task stopped.');
         await cdp('Input.dispatchMouseEvent',{type:'mouseMoved',x,y});
+        if(args.action!=='move'){await this.onPointer?.({x,y,window:w,phase:'down'});await new Promise(r=>setTimeout(r,70));}
         if(args.action!=='move')for(let clickCount=1;clickCount<=(args.action==='double_click'?2:1);clickCount++)for(const type of ['mousePressed','mouseReleased'])await cdp('Input.dispatchMouseEvent',{type,x,y,button:'left',clickCount});
+        if(args.action!=='move')await this.onPointer?.({x,y,window:w,phase:'release'});
       }else if(args.action==='type'){
-        const editable=await w.webContents.executeJavaScript(`(() => {const e=document.activeElement;return !!e&&e.type!=='password'&&(['INPUT','TEXTAREA'].includes(e.tagName)||e.isContentEditable);})()`);
+        const editable=await w.webContents.executeJavaScript(`(() => {const e=document.activeElement;if(!e||e.type==='password'||!(['INPUT','TEXTAREA'].includes(e.tagName)||e.isContentEditable))return null;const r=e.getBoundingClientRect();return {x:r.x+Math.min(30,r.width/2),y:r.y+r.height/2};})()`);
         if(!editable)throw new Error('Click an editable non-password field first.');
+        this.browserPointer=editable;await this.onPointer?.({...editable,window:w,phase:'type'});
         if(args.replace)await this.browserKey(cdp,'Control+A');
         await cdp('Input.insertText',{text:args.text});
       }else if(args.action==='key')await this.browserKey(cdp,args.key);

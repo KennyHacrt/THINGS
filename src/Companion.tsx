@@ -10,7 +10,7 @@ export function Companion() {
     void window.thingsDesktop?.getActivity().then(value => {if(!disposed) setActivity(value);}).catch(() => {});
     return () => {disposed=true;unsubscribe?.();};
   }, []);
-  return <div className={`desktop-hand ${activity.motion ? '' : 'reduce-motion'}`}>
-    <Hand pose={activity.pose}/><span className="desktop-hand-label">{activity.label}</span>
+  return <div className={`desktop-hand action-pointer phase-${activity.cursorPhase||'point'}`} aria-label={activity.label}>
+    <Hand pose="point"/><span className="cursor-contact"/><span className="cursor-typing" aria-hidden="true"/>
   </div>;
 }

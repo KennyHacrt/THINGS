@@ -9,6 +9,7 @@ const {DesktopTools}=require('./desktop-tools.cjs');
 const {VisionTools,visionTools}=require('./vision-tools.cjs');
 const {assessAction}=require('./vision-policy.cjs');
 const {randomUUID}=require('node:crypto');
+const {LAYOUT,placement,ActionCursor}=require('./cursor.cjs');
 const path = require('node:path');
 app.disableHardwareAcceleration();
 let mainWindow, companionWindow, quickWindow, cursorTimer, dockWindow, tray;
@@ -17,7 +18,7 @@ let previousPoint, lastSent = '';
 let stillSince = Date.now();
 let activity = {pose:'idle', label:'Your little helper', motion:true, busy:false};
 let agent, browserTools, desktopTools, credentials, vision;
-let pointerOverride=null;
+const actionCursor=new ActionCursor({toDip:p=>screen.screenToDipPoint(p),onChange:state=>{activity={...activity,cursorPhase:state.phase};positionCompanion();}});
 const approvals=new Map();
 const appFile = path.join(__dirname, '..', 'dist', 'index.html');
 const preload = path.join(__dirname, 'preload.cjs');
@@ -35,15 +36,9 @@ function publishActivity(value = activity) {
 }
 function positionCompanion() {
   if (!companionWindow || companionWindow.isDestroyed()) return;
-  const point = pointerOverride&&pointerOverride.until>Date.now()?pointerOverride:screen.getCursorScreenPoint();
-  if(!previousPoint || Math.abs(point.x - previousPoint.x) + Math.abs(point.y - previousPoint.y) > 2) stillSince = Date.now();
-  previousPoint = point;
-  const bounds = screen.getDisplayNearestPoint(point).workArea;
-  companionWindow.setPosition(
-    Math.round(Math.max(bounds.x, Math.min(point.x - 63, bounds.x + bounds.width - 150))),
-    Math.round(Math.max(bounds.y, Math.min(point.y - 13, bounds.y + bounds.height - 180))), false,
-  );
-  publishActivity({...activity, pose: activity.busy || activity.pose === 'success' ? activity.pose : Date.now()-stillSince < 160 ? 'walk' : 'idle'});
+  const point=actionCursor.point||screen.getCursorScreenPoint();
+  const b=placement(point);companionWindow.setPosition(b.x,b.y,false);
+  publishActivity({...activity,cursorPhase:actionCursor.phase});
 }
 function secureWindow(window) {
   window.webContents.setWindowOpenHandler(() => ({action:'deny'}));
@@ -52,7 +47,7 @@ function secureWindow(window) {
 function openCompanion() {
   if (companionWindow && !companionWindow.isDestroyed()) return;
   companionWindow = new BrowserWindow({
-    width:150, height:180, frame:false, transparent:true, backgroundColor:'#00000000', alwaysOnTop:true,
+    width:LAYOUT.width, height:LAYOUT.height, frame:false, transparent:true, backgroundColor:'#00000000', alwaysOnTop:true,
     skipTaskbar:true, focusable:false, resizable:false, show:false, hasShadow:false,
     webPreferences:{preload,contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false},
   });
@@ -97,12 +92,12 @@ else {
     const isDock=event=>event.sender===dockWindow?.webContents&&event.senderFrame===dockWindow.webContents.mainFrame;
     const isControl=event=>isMain(event)||isDock(event);
     credentials=createKeyStore({safeStorage,directory:app.getPath('userData')});
-    browserTools=new BrowserTools({BrowserWindow});desktopTools=new DesktopTools();
-    vision=new VisionTools({browser:browserTools,desktop:desktopTools,desktopCapturer,onPointer:async({x,y,window})=>{const b=window.getContentBounds(),p={x:b.x+x,y:b.y+y};pointerOverride={...p,until:Date.now()+1300};const handle=window.getNativeWindowHandle().readUInt32LE();await desktopTools.request('browser_pointer',{handle,x:p.x,y:p.y,scale:screen.getDisplayMatching(b).scaleFactor});}});
+    browserTools=new BrowserTools({BrowserWindow});desktopTools=new DesktopTools({onPointer:event=>actionCursor.accept(event)});
+    vision=new VisionTools({browser:browserTools,desktop:desktopTools,desktopCapturer,onPointer:async({x,y,window,phase='move'})=>{const b=window.getContentBounds(),p=screen.dipToScreenPoint({x:Math.round(b.x+x),y:Math.round(b.y+y)});const handle=window.getNativeWindowHandle().readUInt32LE();await desktopTools.request('browser_pointer',{handle,x:p.x,y:p.y,scale:1,phase});}});
 
     const send=event=>{if(mainWindow&&!mainWindow.isDestroyed())mainWindow.webContents.send('things:agent-event',event);if(dockWindow&&!dockWindow.isDestroyed())dockWindow.webContents.send('things:desk-event',event);};
     const chat=(role,text,speak=false)=>{if(dockWindow&&!dockWindow.isDestroyed())dockWindow.webContents.send('things:desk-event',{type:'chat',role,text,speak});};
-    const setActivity=value=>{activity={...activity,...value};publishActivity();};
+    const setActivity=value=>{activity={...activity,...value};if(value.busy===false)actionCursor.release();publishActivity();};
     const approve=(action,signal)=>new Promise(resolve=>{
       const id=randomUUID();let timer;
       const finish=allowed=>{clearTimeout(timer);signal.removeEventListener('abort',cancel);approvals.delete(id);send({type:'approval-resolved',approvalId:id,allowed});resolve(allowed);};
