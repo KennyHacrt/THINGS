@@ -7,3 +7,7 @@ dist/
 *.log
 .DS_Store
 *.tsbuildinfo
+.desktop-env/
+.things-local/
+verification-private/
+__pycache__/

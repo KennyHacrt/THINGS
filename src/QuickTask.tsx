@@ -20,7 +20,7 @@ export function QuickTask() {
     <button className="quick-close" aria-label="Close quick task" onClick={() => window.thingsDesktop?.closeQuick()}><X size={18}/></button>
     <div className="quick-heading"><Hand pose="idle"/><div><div className="eyebrow">YOUR LITTLE HELPING HAND</div><h1>Got a little thing?</h1><p>Tell me what you need. I'll bring it to your workspace.</p></div></div>
     <form onSubmit={e => {e.preventDefault(); void submit();}}><label className="sr-only" htmlFor="quick-prompt">Your task</label><input id="quick-prompt" ref={input} autoFocus value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="What can I take off your hands?" maxLength={2000}/><button type="submit" aria-label="Send task to workspace" disabled={pending || !prompt.trim()}><ArrowRight size={20}/></button></form>
-    <div className="quick-suggestions">{suggestions.map(s => <button disabled={pending} key={s.scenario} onClick={() => void submit(s.prompt)}>{s.title}</button>)}</div>
-    {error ? <p className="quick-status" role="status">{error}</p> : <p className="quick-status">Local demo · Ctrl / ⌘ + Shift + Space to summon · Esc to close</p>}
+    <div className="quick-suggestions">{[{title:'Read a real page',prompt:'Open https://example.com and tell me its heading and purpose.'},{title:'Write a little note',prompt:'Open a fresh Notepad and write: Meet THINGS. A little hand, a lot off your hands.'}].map(s => <button disabled={pending} key={s.title} onClick={() => void submit(s.prompt)}>{s.title}</button>)}</div>
+    {error ? <p className="quick-status" role="status">{error}</p> : <p className="quick-status">Poe + real tools · Ctrl / ⌘ + Shift + Space to summon · Esc to close</p>}
   </main>;
 }

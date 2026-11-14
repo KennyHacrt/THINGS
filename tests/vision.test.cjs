@@ -1,0 +1,14 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {point,visionTools}=require('../electron/vision-tools.cjs');
+const {assessAction}=require('../electron/vision-policy.cjs');
+const {Agent}=require('../electron/agent.cjs');
+test('screenshot coordinates map by dimensions and reject off-image points',()=>{assert.deepEqual(point({x:640,y:360},{width:1280,height:720}),{x:.5,y:.5});for(const x of [-1,1280,Infinity,NaN])assert.throws(()=>point({x,y:10},{width:1280,height:720}));});
+test('tool scope restricts screenshot targets and available launch tools',()=>{const browser=visionTools({mode:'browser'});assert.deepEqual(browser[0].function.parameters.properties.target.enum,['browser']);assert.ok(!browser.some(t=>t.function.name==='desktop_open'));assert.ok(!visionTools({mode:'desktop'}).some(t=>t.function.name==='browser_open'));});
+test('final commitments require confirmation even when the reason names them',async()=>{const result=await assessAction({args:{action:'click',reason:'Confirm booking and purchase tickets'},complete:()=>{throw new Error('Must not call provider');}});assert.equal(result,'CONFIRM');});
+test('uncertain visual gate decisions do not become automatic input',async()=>{const result=await assessAction({frame:{width:10,height:10,image:'data:image/jpeg;base64,test'},args:{action:'click',reason:'click button'},prompt:'task',credentials:{key:()=> 'test',config:()=>({model:'test'})},complete:async()=>({message:{content:'maybe safe'}})});assert.equal(result,'CONFIRM');});
+test('formatted routine classifications parse, and contradictory ones remain conservative',async()=>{for(const [answer,expected] of [['**ROUTINE**','ROUTINE'],['ROUTINE or CONFIRM','CONFIRM'],['BLOCK','BLOCK']]){const result=await assessAction({frame:{width:10,height:10,image:'data:image/jpeg;base64,test'},args:{action:'click',reason:'press 7'},prompt:'calculate',credentials:{key:()=> 'test',config:()=>({model:'test'})},complete:async()=>({message:{content:answer}})});assert.equal(result,expected);}});
+test('fresh screenshots are sent as images to the next model decision',async()=>{
+  let requests=0;const frame={id:'frame-1',target:'browser',width:100,height:100,image:'data:image/jpeg;base64,test',url:'https://example.com/'};
+  const agent=new Agent({credentials:{key:()=> 'test',config:()=>({model:'test'})},tools:visionTools,execute:async()=>frame,onEvent:()=>{},onActivity:()=>{},requestApproval:async()=>false,complete:async({messages})=>{requests++;if(requests===1)return {message:{role:'assistant',tool_calls:[{id:'x',function:{name:'browser_open',arguments:'{"url":"https://example.com"}'}}]},usage:{}};assert.ok(messages.some(m=>Array.isArray(m.content)&&m.content.some(c=>c.type==='image_url'&&c.image_url.url===frame.image)));return {message:{role:'assistant',content:'Observed the page.'},usage:{}};}});
+  const result=await agent.start('Read page',{mode:'browser'});assert.equal(result.result,'Observed the page.');
+});

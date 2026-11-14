@@ -2,81 +2,73 @@
 
 **A little hand. A lot off your hands.**
 
-An original desktop-companion hackathon prototype: give a stitched little hand a task, watch it interact with a workspace, and keep the result. Inspired by the idea of a helpful disembodied hand in *Wednesday* and voice-delegated computing in [Hands](https://github.com/lithdew/hands). The interface, character SVG, animations, and implementation here are original; no source or UI assets were copied from either.
+THINGS is an original Windows desktop companion with a real Poe-powered visual agent, a task browser, screenshot-based Windows control, and an animated stitched hand. The interface, vector character, animations, and implementation are original. The concept is inspired by the helping hand in *Wednesday* and the voice-delegation idea in [Hands](https://github.com/lithdew/hands).
 
-## Start
+## Run
 
-Requires Node.js 22.6+ and npm. Tested on Windows with Node 22.17.
+Requires Node.js 22.6+ and npm. Windows desktop tools also require Python 3.11+.
 
 ```sh
 npm ci
-npm run dev
-```
-
-Open http://127.0.0.1:5173. For the desktop app:
-
-```sh
+npm run desktop:setup
 npm run desktop
 ```
 
-In the desktop app, open **Make it yours → Desktop companion** to enable a transparent, always-on-top hand following your system cursor. It is click-through and leaves the real pointer visible for precision. Turn it off in the same settings. Closing THINGS also closes the companion.
+`desktop:setup` installs pywin32 into a project-local, ignored `.desktop-env`. Browser tasks work without Python. The Windows adapter is not available on macOS/Linux.
 
-**Ctrl/Cmd + Shift + Space** summons a compact quick-task window. Type a task or choose a suggestion to send it to the main workspace. Press the shortcut again or Escape to close it. A running task cannot be replaced from this window.
+For the sample-only browser preview, use `npm run dev` and open http://127.0.0.1:5173. Real AI tools and credential settings run in Electron's main process and are unavailable in an ordinary browser.
 
-In **Make it yours → Hand cursor**, enable a pointing hand as your cursor inside THINGS. Pointer clicks still target the underlying controls. Touch input keeps its normal behavior. The desktop companion also reflects the main task's thinking, clicking, paused, and finished states, and walks while the system pointer moves.
+## Connect Poe
 
-Browser and OS speech support varies; typing always works. Speech recognition may use your browser's speech service. Voice text is reviewed before submitting and never automatically starts a task.
+Open **Make it yours → A little intelligence**. Enter your Poe API key and a tool-capable Poe bot name (default: `Claude-Sonnet-4.6`), then **Save connection** and **Test connection**. The test verifies an actual function call, not merely an HTTP success.
 
-## What works now
+Credentials are encrypted with Electron `safeStorage` using the current OS user, stored in the application's user-data directory, and never returned to the renderer. The API endpoint is fixed to `https://api.poe.com/v1/chat/completions`. No API key belongs in `.env`, source, GitHub, or a screenshot.
 
-- Original responsive ivory-and-lilac workspace, history, and preferences.
-- Original SVG hand with idle, walking, thinking, tapping, and celebration states.
-- Three interactive demos: vegetarian dinners under 30 minutes, sample tab grouping, and an afternoon focus schedule.
-- Hand movement targets the actual workspace buttons; those buttons update the displayed data.
-- Pause, resume, cancel, replay, and manual workspace interaction.
-- Local completed-task history (up to 30 entries), persisted preferences, downloadable JSON results.
-- Markdown notes for all results. Afternoon plans export five local-time calendar events to an `.ics` file for a selected date; import the file in your calendar app to add them.
-- Browser speech-input integration with availability and permission error handling.
-- Electron shell with isolated preload, click-through desktop hand, live activity updates, single-instance handling, and a global quick-task shortcut.
-- Reduced-motion support and optional completion sound.
+## Real tasks
 
-## Prototype boundary
+1. Choose **Real tasks** and select **Browser**, **Desktop**, or **Both**.
+2. For desktop work, use a task-specific fresh Notepad/Calculator, or explicitly choose an existing supported window.
+3. Allow screenshot sharing with Poe for tasks in this session. Only the task browser or selected desktop window is captured while executing a task; turn sharing off any time between tasks.
+4. Type a task, or use browser speech recognition to draft it. Review speech text before sending.
+5. THINGS captures the current window, sends the screenshot to the visual model, executes the returned coordinate action, captures the result, and repeats for up to 36 decisions. The latest screenshot is visible under **Thing’s view**.
+6. Routine searching, navigation, clicking, filters, dates, form fields, note writing and scrolling run automatically. A separate visual action gate checks proposed inputs. Final purchases/bookings, sending/publishing, deletion, private uploads and access changes require confirmation. Uncertain actions also pause for confirmation.
+7. Pause/resume or stop from the task controls. Save the final result as Markdown. Completed real-task summaries have a separate local history.
 
-This is an **interactive local demo**, not a connected AI computer-use agent. The three task plans are deterministic and work on bundled sample data. No model/API key is required. Unknown requests show an explanation instead of inventing results. Sample tab grouping does not access your actual browser tabs, and the desktop companion visual does not control the operating system.
+Examples:
 
-Results stay in local storage until you download them. The optional font request goes to Google Fonts; system sans-serif fonts are used offline. Speech recognition can send audio to the browser vendor's service.
+- “Open https://example.com and explain its purpose using the page contents.”
+- “Search the web for the official Python documentation and summarize what it covers.”
+- “Open a fresh Notepad, write a short hackathon introduction, then inspect the editor to verify it. Leave it open.”
+- “Inspect the selected Calculator window and help me calculate 137 times 24.”
 
-## Demo script (about 60 seconds)
+The task browser has an isolated session and does not attach to your existing Chrome or Edge tabs. The visual model reads screenshots and chooses pixel coordinates; Chromium input events perform the actions. Every screenshot has a frame ID and dimensions. Out-of-bounds coordinates, stale frames and changed page/window geometry are rejected. There is no model-provided JavaScript execution tool. Password input, file downloads, popup windows and browser permissions are unavailable to the agent. Local/private URL literals and credential-bearing URLs are rejected. A software rendering path and Chromium capture fallback keep browser screenshots working on Windows GPU drivers.
 
-1. Say: “Meet THINGS. Your own little helping hand.”
-2. Click **Find dinner inspiration**. The hand opens the recipe collection, filters by the actual dietary/time fields, selects three matches, and saves the shortlist.
-3. Pause and resume to show that the user remains in control.
-4. Download the result or open **Things done**.
-5. In Electron, enable the desktop companion and move the pointer to show the hand following it.
-6. Be explicit with judges: this build demonstrates the interaction design and local execution loop. Connecting a real reasoning model and computer-control adapter is the next milestone.
+Desktop tools capture the selected application's window with Electron's desktop capturer, then map screenshot coordinates to its visible physical bounds for Win32 input. They do not rely on an accessibility element tree. A fresh Notepad task opens a uniquely named file under the ignored `.things-local/notes` directory. If you switch away from that note, the task refuses to continue on another note. Existing windows require explicit selection. Screenshots can include any other visible tabs or content within the selected app; choose the intended window before sharing. Terminal, password-manager, security, and external-browser applications are outside the desktop adapter's scope.
+
+## Your little hand
+
+- **Make it yours → Desktop companion** enables the transparent, click-through hand following your cursor. It reflects live thinking, input, approval, paused, stopped, and finished states.
+- **Hand cursor** replaces the pointer inside THINGS with an original pointing/tapping character.
+- **Ctrl/Cmd + Shift + Space** opens a compact quick-task window. Its requests route to the real agent in the main workspace. A running task cannot be replaced by a quick task.
+- **Ctrl/Cmd + Alt + Space** stops the running agent from any application.
+- Character motion respects reduced-motion settings; completion sound is optional.
+- Closing the main app stops tasks and closes its task browser, quick window, and companion. Other desktop apps are left open.
+
+## Sample demo mode
+
+**Sample demo** preserves the three deterministic local demos (vegetarian dinners, sample tab grouping, and an afternoon schedule). Sample actions update real local UI state, but do not access your actual tabs or calendar. Export sample results as JSON/Markdown, or import an afternoon `.ics` file into your calendar manually. Sample mode needs no API key.
+
+## Limits
+
+This is a hackathon prototype, not an unrestricted OS agent. It cannot operate elevated windows, authentication dialogs, arbitrary installed programs, shell commands, payments, account changes, software installation, security settings, or destructive actions. AI decisions can still be wrong; action approval and observation are part of the interaction. Some websites block automation or require manual login. Speech support depends on the browser/OS and can use the browser vendor's speech service. The optional font request goes to Google Fonts.
 
 ## Development
 
 ```sh
-npm test       # Routing, dietary constraints, and corrupted storage cases
-npm run build # Strict TypeScript check and production bundle
-npm run preview
+npm test
+npm run build
 ```
 
-| File | Responsibility |
-| --- | --- |
-| `src/App.tsx` | Workspace, task executor, speech input, history and preferences |
-| `src/engine.ts` | Explicit demo plans, sample data, persisted-data validation |
-| `src/Hand.tsx` | Original stitched-hand vector character |
-| `src/styles.css` | Responsive interface and character motion |
-| `electron/main.cjs` | Desktop window, global shortcut and cursor companion |
-| `electron/preload.cjs` | Narrow companion/shortcut bridge |
-| `src/QuickTask.tsx` | Compact desktop quick-task window |
-| `src/Pointer.tsx` | Click-through pointing-hand cursor |
-| `src/results.ts` | Markdown notes and calendar-file exports |
+`electron/agent.cjs` owns the screenshot/model/action loop. `vision-tools.cjs` captures browser/desktop frames and maps coordinate actions. `vision-policy.cjs` checks input risk. `poe.cjs` handles the fixed-endpoint provider connection; `key-store.cjs` owns encrypted credential storage. `browser.cjs` creates the isolated task browser. `desktop-tools.cjs` manages the bounded JSON-lines Win32 worker in `screen_worker.py`. `src/LiveAgent.tsx` renders task scope, live screenshots, approvals, observations, results, and history. Original sample mode lives in `src/engine.ts` and `src/App.tsx`.
 
-## Next milestone
-
-Replace `createPlan()` with a real planner through a server-side agent adapter. Keep credentials out of the renderer and repository. Add a controlled browser/desktop execution adapter with observable actions, cancellation, and confirmation for consequential operations. Package signed desktop installers once the agent loop is ready.
-
-THINGS is an independent hackathon project and is not affiliated with Netflix, *Wednesday*, or the original Hands project.
+THINGS is independent and is not affiliated with Poe, Netflix, *Wednesday*, or the original Hands project.
