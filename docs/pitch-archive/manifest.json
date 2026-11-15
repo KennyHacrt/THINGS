@@ -172,26 +172,6 @@
       "sha256": "094abe5b0e9839038c7fd4dfb076476c40f4f7108452262a51cc9f1b7a36e244"
     },
     {
-      "path": "sources/slide-builder/assets/team-0.png",
-      "bytes": 279286,
-      "sha256": "a1129991e0f66306f04cf2ca1c0f473cbd301571346180150125f3c818c24aaf"
-    },
-    {
-      "path": "sources/slide-builder/assets/team-1.png",
-      "bytes": 335931,
-      "sha256": "0b944077d59f8e7e208b06c45227404a71401d4268e76670e8257fb9b5787c1f"
-    },
-    {
-      "path": "sources/slide-builder/assets/team-2.png",
-      "bytes": 297303,
-      "sha256": "2b143fa1b2384c57bc311e137960e9d4aad4dee2005fb1dfd57e8c25eab13da8"
-    },
-    {
-      "path": "sources/slide-builder/assets/team-3.png",
-      "bytes": 312308,
-      "sha256": "c4a995ae7423b1193e1865c7ad1ddc5fdc3b4e0b13ab8e18bc8147d8edf2b819"
-    },
-    {
       "path": "sources/slide-builder/build.mjs",
       "bytes": 17026,
       "sha256": "81e572be1acee21086ff512e65ab57a7846bc2dbf09f522814714562b5967c19"
@@ -206,5 +186,8 @@
       "bytes": 3681,
       "sha256": "8eef2e3b4f333122308713ab211e6742457300dd4ac2d2ece2ca08871e504024"
     }
+  ],
+  "excluded": [
+    "Standalone portrait crops: omitted after automatic approval review; team portraits remain in the completed slides."
   ]
 }

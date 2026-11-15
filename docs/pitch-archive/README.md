@@ -30,6 +30,6 @@ The separate app prototype includes local speech recognition, real AI requests a
 
 ## Rebuild sources
 
-sources/rule-demo contains the controlled demo pages, fixed-action recorder, voice scripts, edit script and action/timing records. sources/slide-builder contains the presentation source and portrait crops. The builders retain original workspace/runtime paths and are an archive, not a one-command portable build; update paths and install the required dependencies before rebuilding. No credentials or browser profiles are included.
+sources/rule-demo contains the controlled demo pages, fixed-action recorder, voice scripts, edit script and action/timing records. sources/slide-builder contains the presentation source. Standalone portrait crops are excluded; the completed team slide is included. The builders retain original workspace/runtime paths and are an archive, not a one-command portable build; update paths and install the required dependencies before rebuilding. No credentials or browser profiles are included. Rebuilding the team slide requires separately supplied portrait originals.
 
 The final source app is preserved in the main repository and the Windows portable application is in GitHub Releases. Temporary caches, installed dependencies, raw recording experiments and obsolete desktop captures are deliberately excluded. This is a backup of final reusable deliverables, not every scratch file from the chat.
