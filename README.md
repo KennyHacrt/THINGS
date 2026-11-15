@@ -4,7 +4,7 @@
 
 A Windows hackathon prototype: speak a task, watch an original stitched-hand cursor operate a task browser, and receive a spoken response beside your desktop. Inspired by *Wednesday* and the voice-delegation concept in [Hands](https://github.com/lithdew/hands); the interface and character are original.
 
-The [Hands reference demo and script](docs/references/hands/Hands-demo-script.md) include the original video link and timestamped captions.
+[Version 1](version-1/) contains the THINGS pitch, slides and demo recordings. [Version 2](version-2/) contains the Hands reference video, script and timestamped captions.
 
 ## For hackathon reviewers
 

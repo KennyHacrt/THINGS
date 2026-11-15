@@ -1,0 +1,35 @@
+1
+00:00:00,200 --> 00:00:03,400
+Let's jump straight into Things on the desktop.
+
+2
+00:00:03,600 --> 00:00:16,600
+Find return flights from Hong Kong to Tokyo, departing December twelfth and returning December fifteenth, twenty twenty six. Show the options in this browser. Do not book.
+
+3
+00:00:17,000 --> 00:00:23,000
+No typed prompt. Things shows what it hears, then starts when I finish speaking.
+
+4
+00:00:23,200 --> 00:00:30,000
+First, start a flight search from Hong Kong to Tokyo.
+
+5
+00:00:30,200 --> 00:00:39,000
+Next, a separate take: searching Keeta for lunch, without placing an order.
+
+6
+00:00:39,200 --> 00:00:48,000
+Then, public travel updates on X, using the browser to look up what is visible.
+
+7
+00:00:48,200 --> 00:00:56,000
+Watch the hand move, click, and type while the voice panel stays available.
+
+8
+00:00:56,200 --> 00:01:08,500
+Finally, ask for a full itinerary. Things uses your request to plan the trip and replies right here, beside your desktop.
+
+9
+00:01:09,000 --> 00:01:15,000
+These are separate takes, edited together. Things. Your little helping hand.

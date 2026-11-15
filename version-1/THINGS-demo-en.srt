@@ -1,0 +1,39 @@
+1
+00:00:00,500 --> 00:00:06,500
+Meet Things. A little helping hand that turns your voice into real computer actions.
+
+2
+00:00:07,000 --> 00:00:10,000
+Press the shortcut. Then just speak.
+
+3
+00:00:10,500 --> 00:00:19,000
+Find three research papers about retrieval augmented generation. Open the sources and give me a short summary with links.
+
+4
+00:00:19,500 --> 00:00:25,000
+That's the whole request. It starts automatically. No typing, and no send button.
+
+5
+00:00:25,500 --> 00:00:32,000
+Things opens its own browser and visits public research sources.
+
+6
+00:00:32,500 --> 00:00:43,000
+It reads the page, captures the screen, and decides what to do next. Then it checks the result before continuing.
+
+7
+00:00:43,500 --> 00:00:49,000
+This part is sped up. The sources and AI actions are real.
+
+8
+00:00:50,000 --> 00:01:01,000
+And here's the result. Three research papers, short summaries, and source links you can open and verify.
+
+9
+00:01:02,000 --> 00:01:09,000
+From one spoken request to a research shortlist, without manually searching through tabs.
+
+10
+00:01:10,000 --> 00:01:15,000
+Things. A little hand. A lot off your hands.
