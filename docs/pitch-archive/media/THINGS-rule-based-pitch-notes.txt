@@ -1,0 +1,5 @@
+Rule-based pitch walkthrough, 60 seconds.
+Prerecorded English voice; action titles only, no video subtitles.
+Controlled local sample pages with real Chromium clicks, typing and scrolling.
+No live AI decisions, API calls, bookings, orders or publications.
+47 recorded input actions.

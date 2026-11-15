@@ -1,0 +1,23 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {createRequire} from 'node:module';
+const root=process.cwd(),out=path.join(root,'outputs/pitch-slides');
+const runtime='C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1105-1297-0_26.1105.1297.0_x64__3k8sg7r9htsxt/dependencies';
+process.env.RUNTIME_NODE_MODULES=runtime+'/node/node_modules';process.env.RUNTIME_NODE=runtime+'/node/bin/node.exe';
+const {constants}=await import('node:fs');
+// Windows workspace does not permit hard links. Preserve exclusive publication and byte validation.
+const originalLink=fs.link;
+fs.link=async(a,b)=>{try{return await originalLink(a,b);}catch(e){if(e.code!=='EPERM')throw e;return fs.copyFile(a,b,constants.COPYFILE_EXCL);}};
+const sd='C:/Users/leeke/.codex/plugins/cache/openai-primary-runtime/presentations/26.1105.12137/skills/presentations';
+const {finalizePresentation}=await import(pathToFileURL(sd+'/container_tools/artifact_tool_utils.mjs'));
+const result=await finalizePresentation({workspaceDir:root,candidatePath:path.join(root,'work/pitch-slides/candidate.pptx'),finalPath:path.join(out,'THINGS-pitch.pptx'),pythonExecutable:runtime+'/python/python.exe',integrityValidatorPath:sd+'/container_tools/inspect_presentation_package_integrity.py',layoutValidatorPath:sd+'/container_tools/inspect_presentation_layout_geometry.py',layoutArgs:['--expected-slide-size-emu','18288000,10287000','--validate-heading-fit'],fontPolicy:{basis:'design',families:['Segoe UI']},verifyArtifactToolImport:true,receiptPath:path.join(root,'work/pitch-slides/validation.json')});
+console.log('Finalized PPTX',result.finalPath??'OK');
+const require=createRequire(import.meta.url),sharp=require('../recorder-deps/node_modules/sharp');
+const files=(await fs.readdir(out)).filter(x=>/^\d\d-.*\.png$/.test(x)).sort();
+const tiles=[];for(let i=0;i<files.length;i++)tiles.push({input:await sharp(path.join(out,files[i])).resize(600,338).png().toBuffer(),left:24+(i%3)*624,top:24+Math.floor(i/3)*362});
+await sharp({create:{width:1896,height:1472,channels:3,background:'#e4dfea'}}).composite(tiles).jpeg({quality:93}).toFile(path.join(out,'preview.jpg'));
+const html='<!doctype html><html lang="en"><meta charset="utf-8"><title>THINGS pitch slides</title><style>body{background:#f7f5f2;color:#29252f;font-family:Segoe UI,Arial;margin:40px auto;max-width:1200px;padding:0 24px}h1{font-size:48px}p{font-size:20px;color:#81798a}figure{margin:40px 0}img{width:100%;height:auto}a{color:#8966b5}figcaption{margin-top:12px;font-size:20px}</style><h1>THINGS pitch slides</h1><p>12 individual 1920 × 1080 PNGs. Open an image to copy or download it, then upload to Canva. Page 07 is the video poster.</p>'+files.map((f,i)=>`<figure><a href="${f}" download><img src="${f}" alt="Slide ${i+1}"></a><figcaption><a href="${f}" download>Download ${f}</a></figcaption></figure>`).join('')+'</html>';
+await fs.writeFile(path.join(out,'index.html'),html);
+await fs.writeFile(path.join(out,'CANVA.txt'),'THINGS pitch slides\r\n\r\n12 individual 1920 x 1080 PNGs, numbered in presentation order.\r\nUpload the PNGs to Canva and set each image as a page background.\r\nThe PPTX is also editable. Import it into Canva if you need to change text.\r\n\r\nPage 07 contains a static poster. Place THINGS-rule-based-pitch-60s.mp4 over the image area to play the demo.\r\nThe poster image area is x=384, y=340, width=1152, height=648 on a 1920 x 1080 page.\r\nThe demo video is in the separate outputs/video folder.\r\n\r\nOriginal team portraits come from the supplied screenshot, so their source resolution is limited.\r\n');
+console.log('PNG count',files.length);

@@ -1,0 +1,308 @@
+[
+  {
+    "time": 9.922,
+    "action": "click",
+    "id": "origin",
+    "x": 176.5,
+    "y": 350.00001335144043
+  },
+  {
+    "time": 10.438,
+    "action": "type",
+    "id": "origin",
+    "text": "Hong Kong"
+  },
+  {
+    "time": 11.044,
+    "action": "click",
+    "id": "destination",
+    "x": 417.5,
+    "y": 350.00001335144043
+  },
+  {
+    "time": 11.461,
+    "action": "type",
+    "id": "destination",
+    "text": "Tokyo"
+  },
+  {
+    "time": 12.101,
+    "action": "click",
+    "id": "dates",
+    "x": 658.5,
+    "y": 347.20001220703125
+  },
+  {
+    "time": 12.662,
+    "action": "click",
+    "id": "date-12",
+    "x": 609,
+    "y": 363.6499938964844
+  },
+  {
+    "time": 13.199,
+    "action": "click",
+    "id": "date-15",
+    "x": 293,
+    "y": 410.6499938964844
+  },
+  {
+    "time": 13.798,
+    "action": "click",
+    "id": "apply-dates",
+    "x": 313.03750228881836,
+    "y": 587.6500244140625
+  },
+  {
+    "time": 14.374,
+    "action": "click",
+    "id": "flight-search",
+    "x": 899.5,
+    "y": 347.6000118255615
+  },
+  {
+    "time": 14.97,
+    "action": "click",
+    "id": "direct",
+    "x": 87.42499923706055,
+    "y": 398.19999504089355
+  },
+  {
+    "time": 15.533,
+    "action": "click",
+    "id": "sort",
+    "x": 949.0000152587891,
+    "y": 398.20000648498535
+  },
+  {
+    "time": 15.932,
+    "action": "key",
+    "key": "ArrowDown"
+  },
+  {
+    "time": 16.136,
+    "action": "key",
+    "key": "Enter"
+  },
+  {
+    "time": 16.521,
+    "action": "click",
+    "id": "short-0",
+    "x": 954.6687889099121,
+    "y": 417.0249938964844
+  },
+  {
+    "time": 17.077,
+    "action": "click",
+    "id": "short-1",
+    "x": 954.6687889099121,
+    "y": 498.2749938964844
+  },
+  {
+    "time": 17.395,
+    "action": "scroll",
+    "y": 370
+  },
+  {
+    "time": 23.235,
+    "action": "click",
+    "id": "tab-lunch",
+    "x": 133.68750381469727,
+    "y": 104.80000114440918
+  },
+  {
+    "time": 23.789,
+    "action": "click",
+    "id": "area",
+    "x": 293.5,
+    "y": 350.00001335144043
+  },
+  {
+    "time": 24.455,
+    "action": "type",
+    "id": "area",
+    "text": "Tsim Sha Tsui"
+  },
+  {
+    "time": 25.103,
+    "action": "click",
+    "id": "budget",
+    "x": 653.25,
+    "y": 350.800012588501
+  },
+  {
+    "time": 25.5,
+    "action": "key",
+    "key": "ArrowDown"
+  },
+  {
+    "time": 25.702,
+    "action": "key",
+    "key": "Enter"
+  },
+  {
+    "time": 26.084,
+    "action": "click",
+    "id": "lunch-search",
+    "x": 897.75,
+    "y": 347.6000118255615
+  },
+  {
+    "time": 26.687,
+    "action": "click",
+    "id": "vegetarian",
+    "x": 104.26875305175781,
+    "y": 410.60001945495605
+  },
+  {
+    "time": 27.236,
+    "action": "click",
+    "id": "delivery",
+    "x": 232.38750839233398,
+    "y": 410.60001945495605
+  },
+  {
+    "time": 27.793,
+    "action": "click",
+    "id": "food-0",
+    "x": 169.85625457763672,
+    "y": 715.0499877929688
+  },
+  {
+    "time": 28.346,
+    "action": "click",
+    "id": "add-lunch",
+    "x": 802.7499923706055,
+    "y": 394.1500072479248
+  },
+  {
+    "time": 28.895,
+    "action": "click",
+    "id": "keep-lunch",
+    "x": 797.5062408447266,
+    "y": 382.25
+  },
+  {
+    "time": 34.116,
+    "action": "click",
+    "id": "tab-updates",
+    "x": 228.06250762939453,
+    "y": 104.80000114440918
+  },
+  {
+    "time": 34.671,
+    "action": "click",
+    "id": "post-query",
+    "x": 477.9875183105469,
+    "y": 305.00001335144043
+  },
+  {
+    "time": 35.315,
+    "action": "type",
+    "id": "post-query",
+    "text": "Tokyo travel"
+  },
+  {
+    "time": 35.947,
+    "action": "click",
+    "id": "post-search",
+    "x": 983.9875373840332,
+    "y": 305.00001335144043
+  },
+  {
+    "time": 36.518,
+    "action": "click",
+    "id": "save-post-Tokyo",
+    "x": 966.4812889099121,
+    "y": 397.82501220703125
+  },
+  {
+    "time": 36.838,
+    "action": "scroll",
+    "y": 400
+  },
+  {
+    "time": 37.793,
+    "action": "click",
+    "id": "summarize-posts",
+    "x": 135.26250457763672,
+    "y": 744.5500011444092
+  },
+  {
+    "time": 43.097,
+    "action": "click",
+    "id": "tab-papers",
+    "x": 330.84374618530273,
+    "y": 104.80000114440918
+  },
+  {
+    "time": 43.707,
+    "action": "click",
+    "id": "paper-query",
+    "x": 453.5874938964844,
+    "y": 276.99999809265137
+  },
+  {
+    "time": 44.977,
+    "action": "type",
+    "id": "paper-query",
+    "text": "retrieval augmented generation"
+  },
+  {
+    "time": 45.632,
+    "action": "click",
+    "id": "paper-search",
+    "x": 959.5874862670898,
+    "y": 276.99999809265137
+  },
+  {
+    "time": 46.183,
+    "action": "click",
+    "id": "read-0",
+    "x": 952.1437873840332,
+    "y": 369.8000183105469
+  },
+  {
+    "time": 46.738,
+    "action": "click",
+    "id": "read-1",
+    "x": 952.1437873840332,
+    "y": 608
+  },
+  {
+    "time": 47.075,
+    "action": "scroll",
+    "y": 320
+  },
+  {
+    "time": 48.027,
+    "action": "click",
+    "id": "save-papers",
+    "x": 121.0625,
+    "y": 744.0000133514404
+  },
+  {
+    "time": 53.102,
+    "action": "click",
+    "id": "tab-plan",
+    "x": 417.012508392334,
+    "y": 104.80000114440918
+  },
+  {
+    "time": 53.435,
+    "action": "scroll",
+    "y": 290
+  },
+  {
+    "time": 54.4,
+    "action": "click",
+    "id": "save-plan",
+    "x": 113.5687484741211,
+    "y": 744.4000377655029
+  },
+  {
+    "time": 54.726,
+    "action": "scroll",
+    "y": -380
+  }
+]

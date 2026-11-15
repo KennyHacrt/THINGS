@@ -1,0 +1,98 @@
+[
+  {
+    "kind": "intro",
+    "title": "THINGS · Scripted demo",
+    "audio": "voice-0.wav",
+    "text": "With Things, just say what needs doing.",
+    "start": 0.712,
+    "end": 3.886
+  },
+  {
+    "kind": "voice",
+    "title": "Comparing flights to Tokyo",
+    "audio": "voice-1.wav",
+    "text": "Find return flights from Hong Kong to Tokyo. Compare the cheapest direct options.",
+    "start": 3.887,
+    "end": 9.548
+  },
+  {
+    "kind": "work",
+    "title": "Comparing flights to Tokyo",
+    "audio": null,
+    "text": "",
+    "start": 9.549,
+    "end": 19.181
+  },
+  {
+    "kind": "voice",
+    "title": "Finding lunch",
+    "audio": "voice-2.wav",
+    "text": "Find lunch in Tsim Sha Tsui for under eighty dollars.",
+    "start": 19.182,
+    "end": 22.852
+  },
+  {
+    "kind": "work",
+    "title": "Finding lunch",
+    "audio": null,
+    "text": "",
+    "start": 22.853,
+    "end": 30.284
+  },
+  {
+    "kind": "voice",
+    "title": "Checking travel updates",
+    "audio": "voice-3.wav",
+    "text": "Catch me up on public Tokyo travel posts.",
+    "start": 30.285,
+    "end": 33.762
+  },
+  {
+    "kind": "work",
+    "title": "Checking travel updates",
+    "audio": null,
+    "text": "",
+    "start": 33.763,
+    "end": 39.261
+  },
+  {
+    "kind": "voice",
+    "title": "Searching research papers",
+    "audio": "voice-4.wav",
+    "text": "Find papers about retrieval augmented generation.",
+    "start": 39.262,
+    "end": 42.751
+  },
+  {
+    "kind": "work",
+    "title": "Searching research papers",
+    "audio": null,
+    "text": "",
+    "start": 42.751,
+    "end": 49.344
+  },
+  {
+    "kind": "voice",
+    "title": "Planning your trip",
+    "audio": "voice-5.wav",
+    "text": "Put everything into a three day Tokyo trip plan.",
+    "start": 49.345,
+    "end": 52.735
+  },
+  {
+    "kind": "work",
+    "title": "Planning your trip",
+    "audio": null,
+    "text": "",
+    "start": 52.736,
+    "end": 57.179
+  },
+  {
+    "kind": "outro",
+    "title": "THINGS · Your little helping hand",
+    "audio": "voice-6.wav",
+    "text": "Things. Your little helping hand.",
+    "start": 57.18,
+    "end": 60.632
+  }
+]

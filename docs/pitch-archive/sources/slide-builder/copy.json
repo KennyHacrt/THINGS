@@ -1,0 +1,73 @@
+[
+  {
+    "slide": 1,
+    "title": "THINGS",
+    "sub": "Your little helping hand"
+  },
+  {
+    "slide": 2,
+    "name": "02-problem",
+    "title": "Small tasks keep\npulling you away",
+    "sub": "For students and busy teams, everyday admin competes with the work they sat down to do."
+  },
+  {
+    "slide": 3,
+    "name": "03-context-switching",
+    "title": "One request,\na lot of clicking",
+    "sub": "Searching, comparing and copying results breaks the flow of a report, a project or a study session."
+  },
+  {
+    "slide": 4,
+    "name": "04-solution",
+    "title": "Tell THINGS what needs doing",
+    "sub": "Speak naturally. THINGS shows what it heard and starts the task."
+  },
+  {
+    "slide": 5,
+    "name": "05-desktop",
+    "title": "A hand with its own task window",
+    "sub": "THINGS runs beside your work as a Windows application."
+  },
+  {
+    "slide": 6,
+    "name": "06-control",
+    "title": "You choose what powers it",
+    "sub": "Connect your own model, follow each action and stop the task when you need to."
+  },
+  {
+    "slide": 7,
+    "name": "07-demo",
+    "title": "THINGS in action",
+    "sub": ""
+  },
+  {
+    "slide": 8,
+    "name": "08-task-examples",
+    "title": "One conversation, several requests",
+    "sub": "The current prototype runs one computer task at a time and queues follow-up requests."
+  },
+  {
+    "slide": 9,
+    "name": "09-pipeline",
+    "title": "How a request becomes an action",
+    "sub": "The agent checks the new screen after each step."
+  },
+  {
+    "slide": 10,
+    "name": "10-architecture",
+    "title": "Inside THINGS",
+    "sub": ""
+  },
+  {
+    "slide": 11,
+    "name": "11-impact",
+    "title": "Less routine clicking\nwhile you work",
+    "sub": "For someone writing a report, THINGS can take the paper search out of the middle of the writing session."
+  },
+  {
+    "slide": 12,
+    "name": "12-team",
+    "title": "The people behind THINGS",
+    "sub": ""
+  }
+]
