@@ -2,9 +2,14 @@
   "saved": "2026-11-16",
   "files": [
     {
+      "path": "README.md",
+      "bytes": 3362,
+      "sha256": "210efad3fa6a424c06cb5b9c4e73fadbeb46e9411800facfdba887808c7c30d0"
+    },
+    {
       "path": "links.md",
-      "bytes": 1066,
-      "sha256": "fd12d4778e700b57c4d759359cec3cd9422843a4c2b6a5dad68c9b8823c0a9ec"
+      "bytes": 1080,
+      "sha256": "7927e2cbea71acdd69bd409c7d9ec2b081133d26fb484b3675ba3ed0a0796f47"
     },
     {
       "path": "media/THINGS-Canva-slides.zip",
@@ -23,23 +28,18 @@
     },
     {
       "path": "media/THINGS-rule-based-pitch-notes.txt",
-      "bytes": 282,
-      "sha256": "72d2849697f0291f74d98d282d2c5faaa7b24311c8969e11c18b69fd57c83e34"
+      "bytes": 287,
+      "sha256": "11ddf44ce28fca601c3a08d35a1acbe379adf182a912fe1fb718af799ab25320"
     },
     {
       "path": "pitch-3min-with-demo.md",
-      "bytes": 3053,
-      "sha256": "450f5f647552f9621746e9d0019fd6062d550c47a82cf480324d931acb739257"
-    },
-    {
-      "path": "README.md",
-      "bytes": 3193,
-      "sha256": "075ed7ea59306f4ae7b8f2ef0e7139b88a1578be38b2ece4888d73cc1e32a1d8"
+      "bytes": 3110,
+      "sha256": "bdcb0b88c335ae5ea9943e5d65b41686d341e487b5313706f0b03b9e2916e72d"
     },
     {
       "path": "security-privacy-qa.md",
-      "bytes": 5346,
-      "sha256": "6ae36588a5b57e82d3f448d246f553a9d311fbe677ed7282c18b07774bfafe66"
+      "bytes": 5404,
+      "sha256": "6879b94d363fef58e936e49e4ae98cbbaaf9864beebd3b18fb613c6ced46e519"
     },
     {
       "path": "slides/01-cover.png",
@@ -103,8 +103,13 @@
     },
     {
       "path": "slides/CANVA.txt",
-      "bytes": 578,
-      "sha256": "55c96dfcbd3a6c0e1164bfdbcbeca6814bf61255552cbe2911ee321ae3689684"
+      "bytes": 589,
+      "sha256": "56ceb157e8e6c234ca4a125c1c6242d8b7cce5624496a4ef6cc1886c382d8e98"
+    },
+    {
+      "path": "slides/THINGS-pitch.pptx",
+      "bytes": 5535865,
+      "sha256": "7588be6c8299ee47b106dfc53b85f5f15af8637775a737c53528016cba9b6c2a"
     },
     {
       "path": "slides/index.html",
@@ -117,77 +122,72 @@
       "sha256": "c66dc56473c531ba43a68aa98d3a069c1eb208601f599ac2969192ebfaed55f1"
     },
     {
-      "path": "slides/THINGS-pitch.pptx",
-      "bytes": 5535865,
-      "sha256": "7588be6c8299ee47b106dfc53b85f5f15af8637775a737c53528016cba9b6c2a"
-    },
-    {
       "path": "sources/rule-demo/actions.json",
-      "bytes": 5287,
-      "sha256": "1564a58dd373a89fc934fcc2bbff4ad8e613a3877cea3899b3b8394e12cdff04"
+      "bytes": 5594,
+      "sha256": "ebd54c62a6744bca483b34dd4999dea3da942958b3d89af96ab5ea68cce51c38"
     },
     {
       "path": "sources/rule-demo/browser.html",
-      "bytes": 13726,
-      "sha256": "5f2e52c2a53849e68546ab4e5e190f52dc2850768118e3f2dd109395966d3627"
+      "bytes": 13751,
+      "sha256": "4676c931cb762dab36eb9e400459a62acb891facc438f09183c0bada70a24158"
     },
     {
       "path": "sources/rule-demo/complete.json",
-      "bytes": 2519,
-      "sha256": "2080eda68e1a5859e4566fc7b79092d3c0dc3c692e3e51de514b9460461b05f3"
+      "bytes": 2623,
+      "sha256": "78c20262c8300d17c41de0fc3baba69932b46675cf8b0b265882133aec443951"
     },
     {
       "path": "sources/rule-demo/edit.py",
-      "bytes": 5029,
-      "sha256": "a06be5aef565ee9ccf4cf43dad97f6bcf809ed085b3ca73c5c525aaca8121c02"
+      "bytes": 5090,
+      "sha256": "d9b016e21c1ee604bed1fdbcdac087e4e4e5bedebc510331c778cb6b9ee9eeb9"
     },
     {
       "path": "sources/rule-demo/panel.html",
-      "bytes": 4230,
-      "sha256": "2f935f7f6808aa3f02e2cf76ada96eabbf24dadb2c645c07e4d27c38f6958122"
+      "bytes": 4236,
+      "sha256": "f78abc324e7851e1eb500cc88c895a6f7d3724a642cd28b26cbc361d893e77b2"
     },
     {
       "path": "sources/rule-demo/phases.json",
-      "bytes": 2117,
-      "sha256": "6d75c21e0255fa1102300f03e691ecd6cf885340343b1e9d1eef926577fd03d6"
+      "bytes": 2214,
+      "sha256": "0c07cbe171d051b31a9728643c933934824d8f5eb317948f6487671ec30be724"
     },
     {
       "path": "sources/rule-demo/record.cjs",
-      "bytes": 8748,
-      "sha256": "4bceb4c62c03b6d4ef793ba4b7239b8323b739bea4ee61e2fe2c865319129206"
+      "bytes": 8784,
+      "sha256": "4b29dc82a11acff007d11d1953f9658cd70e7b8aa95b67c0eaf523c16ad47c65"
     },
     {
       "path": "sources/rule-demo/replies.ps1",
-      "bytes": 536,
-      "sha256": "38e737744dbedad009363778a986dc5455987bf05a2bba263ccb1aa9640b2ed8"
+      "bytes": 539,
+      "sha256": "a9fe82347c222bd80a4bcdd62a912b8645ade32641fc860d1bdfe1db9d0de55c"
     },
     {
       "path": "sources/rule-demo/timeline.json",
-      "bytes": 3524,
-      "sha256": "24707cfe0e8a7c18b40899a528ad99b08c801280708f663e974c4172abf1d196"
+      "bytes": 3669,
+      "sha256": "987245f31bff2d1c0af8f5775f42727edbdebd3b26e4187d6839064553675401"
     },
     {
       "path": "sources/rule-demo/voices.ps1",
-      "bytes": 668,
-      "sha256": "094abe5b0e9839038c7fd4dfb076476c40f4f7108452262a51cc9f1b7a36e244"
+      "bytes": 679,
+      "sha256": "bdde17bcf958065215e531999cd168027d763d4c16a2dd719e920db799f2b595"
     },
     {
       "path": "sources/slide-builder/build.mjs",
-      "bytes": 17026,
-      "sha256": "81e572be1acee21086ff512e65ab57a7846bc2dbf09f522814714562b5967c19"
+      "bytes": 17180,
+      "sha256": "87ee3d79e65547c43d242c3e67e0398c1b5ca5c5b93a4cea343aec2452f6f2a9"
     },
     {
       "path": "sources/slide-builder/copy.json",
-      "bytes": 1932,
-      "sha256": "73e244388045bdd86552ec5b6098555d1062fec766e7cc3618331631fbdd7736"
+      "bytes": 2004,
+      "sha256": "7ecc6cb14f8e051666addf32a17b03ffcd459e8eab3050f30919f45a0d8076e0"
     },
     {
       "path": "sources/slide-builder/finish.mjs",
-      "bytes": 3681,
-      "sha256": "8eef2e3b4f333122308713ab211e6742457300dd4ac2d2ece2ca08871e504024"
+      "bytes": 3704,
+      "sha256": "d615ad68a78509eada9929d24b7ab0dccc2f991aaeaa736bfff16ac57f07d0d9"
     }
   ],
   "excluded": [
-    "Standalone portrait crops: omitted after automatic approval review; team portraits remain in the completed slides."
+    "Standalone portrait crops omitted after automatic approval review; team portraits remain in the completed slides."
   ]
 }
