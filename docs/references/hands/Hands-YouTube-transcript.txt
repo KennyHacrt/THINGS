@@ -1,0 +1,38 @@
+YouTube transcript
+Video ID: 0iIoCPmOIKc
+Language: en
+Captions: auto-generated
+
+[0:04] There's a lot of times we feel a little
+[0:06] light-handed. Things like booking
+[0:08] flights, ordering food online, or
+[0:10] staying up-to-date with what's the UN X,
+[0:12] all these things take up a lot of time
+[0:14] out of our day.
+[0:16] Which is why we built hands.
+[0:19] We envisioned a user experience where
+[0:22] people could hold on a key, voice out
+[0:24] their frustration, and offload whatever
+[0:27] they were working on to one, two, or
+[0:30] several hands.
+[0:33] Powering a single hand is a computer use
+[0:36] integration from scratch that is 150
+[0:39] times cheaper and 14 to 40 times faster
+[0:43] than commercial computer use
+[0:44] integrations.
+[0:46] Our computer use integration is powered
+[0:48] by Type Safe AI's Jev
+[0:50] and reverse engineered foreign function
+[0:52] interface bindings to private native
+[0:54] system frameworks, such as Skylight in
+[0:56] Mac OS.
+[0:58] Just a single computer use interaction,
+[1:00] on average, costs just $0.0002.
+[1:06] When a task requires deep intelligence,
+[1:08] your hand will be relegated to work off
+[1:10] the frontier large language models.
+[1:13] Our hand agent's core is built on top of
+[1:16] the Pi coding agents and therefore
+[1:18] supports all of the frontier lab models
+[1:21] and subscriptions, of course, only for
+[1:24] personal use.
