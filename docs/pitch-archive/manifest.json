@@ -3,8 +3,8 @@
   "files": [
     {
       "path": "links.md",
-      "bytes": 1080,
-      "sha256": "7927e2cbea71acdd69bd409c7d9ec2b081133d26fb484b3675ba3ed0a0796f47"
+      "bytes": 1066,
+      "sha256": "fd12d4778e700b57c4d759359cec3cd9422843a4c2b6a5dad68c9b8823c0a9ec"
     },
     {
       "path": "media/THINGS-Canva-slides.zip",
@@ -23,23 +23,23 @@
     },
     {
       "path": "media/THINGS-rule-based-pitch-notes.txt",
-      "bytes": 287,
-      "sha256": "11ddf44ce28fca601c3a08d35a1acbe379adf182a912fe1fb718af799ab25320"
+      "bytes": 282,
+      "sha256": "72d2849697f0291f74d98d282d2c5faaa7b24311c8969e11c18b69fd57c83e34"
     },
     {
       "path": "pitch-3min-with-demo.md",
-      "bytes": 3110,
-      "sha256": "bdcb0b88c335ae5ea9943e5d65b41686d341e487b5313706f0b03b9e2916e72d"
+      "bytes": 3053,
+      "sha256": "450f5f647552f9621746e9d0019fd6062d550c47a82cf480324d931acb739257"
     },
     {
       "path": "README.md",
-      "bytes": 3228,
-      "sha256": "a54b2c743aab46f6af9d4819c0828dea0df569ff2f8b5592849ba45fc309701c"
+      "bytes": 3193,
+      "sha256": "075ed7ea59306f4ae7b8f2ef0e7139b88a1578be38b2ece4888d73cc1e32a1d8"
     },
     {
       "path": "security-privacy-qa.md",
-      "bytes": 5404,
-      "sha256": "6879b94d363fef58e936e49e4ae98cbbaaf9864beebd3b18fb613c6ced46e519"
+      "bytes": 5346,
+      "sha256": "6ae36588a5b57e82d3f448d246f553a9d311fbe677ed7282c18b07774bfafe66"
     },
     {
       "path": "slides/01-cover.png",
@@ -103,8 +103,8 @@
     },
     {
       "path": "slides/CANVA.txt",
-      "bytes": 589,
-      "sha256": "56ceb157e8e6c234ca4a125c1c6242d8b7cce5624496a4ef6cc1886c382d8e98"
+      "bytes": 578,
+      "sha256": "55c96dfcbd3a6c0e1164bfdbcbeca6814bf61255552cbe2911ee321ae3689684"
     },
     {
       "path": "slides/index.html",
@@ -128,8 +128,8 @@
     },
     {
       "path": "sources/rule-demo/browser.html",
-      "bytes": 13751,
-      "sha256": "4676c931cb762dab36eb9e400459a62acb891facc438f09183c0bada70a24158"
+      "bytes": 13726,
+      "sha256": "5f2e52c2a53849e68546ab4e5e190f52dc2850768118e3f2dd109395966d3627"
     },
     {
       "path": "sources/rule-demo/complete.json",
@@ -138,13 +138,13 @@
     },
     {
       "path": "sources/rule-demo/edit.py",
-      "bytes": 5030,
-      "sha256": "1de8e78f4d482fca16b8871c6d1d5d615ea806f25e8733706550c76db6bfa188"
+      "bytes": 5029,
+      "sha256": "a06be5aef565ee9ccf4cf43dad97f6bcf809ed085b3ca73c5c525aaca8121c02"
     },
     {
       "path": "sources/rule-demo/panel.html",
-      "bytes": 4236,
-      "sha256": "f78abc324e7851e1eb500cc88c895a6f7d3724a642cd28b26cbc361d893e77b2"
+      "bytes": 4230,
+      "sha256": "2f935f7f6808aa3f02e2cf76ada96eabbf24dadb2c645c07e4d27c38f6958122"
     },
     {
       "path": "sources/rule-demo/phases.json",
@@ -153,23 +153,23 @@
     },
     {
       "path": "sources/rule-demo/record.cjs",
-      "bytes": 8749,
-      "sha256": "f1d11cea000d9ac1e466a9568e402796b2181ff2ba5267e144f98848e915b4af"
+      "bytes": 8748,
+      "sha256": "4bceb4c62c03b6d4ef793ba4b7239b8323b739bea4ee61e2fe2c865319129206"
     },
     {
       "path": "sources/rule-demo/replies.ps1",
-      "bytes": 537,
-      "sha256": "659372333430d578edd078ef6d14f9f3b1b0183a307de2a8aab1cc0daa5c4c01"
+      "bytes": 536,
+      "sha256": "38e737744dbedad009363778a986dc5455987bf05a2bba263ccb1aa9640b2ed8"
     },
     {
       "path": "sources/rule-demo/timeline.json",
-      "bytes": 3669,
-      "sha256": "987245f31bff2d1c0af8f5775f42727edbdebd3b26e4187d6839064553675401"
+      "bytes": 3524,
+      "sha256": "24707cfe0e8a7c18b40899a528ad99b08c801280708f663e974c4172abf1d196"
     },
     {
       "path": "sources/rule-demo/voices.ps1",
-      "bytes": 669,
-      "sha256": "c92df7caf4b5d27e49389ce9a1d32cfff1e6da8db553c51a6261425336417fcd"
+      "bytes": 668,
+      "sha256": "094abe5b0e9839038c7fd4dfb076476c40f4f7108452262a51cc9f1b7a36e244"
     },
     {
       "path": "sources/slide-builder/assets/team-0.png",
@@ -193,8 +193,8 @@
     },
     {
       "path": "sources/slide-builder/build.mjs",
-      "bytes": 17027,
-      "sha256": "a56d98a518cb892eaafa7f0f3478f52aeafbd846e0d89db91ebfb77ecfb4e3c7"
+      "bytes": 17026,
+      "sha256": "81e572be1acee21086ff512e65ab57a7846bc2dbf09f522814714562b5967c19"
     },
     {
       "path": "sources/slide-builder/copy.json",
