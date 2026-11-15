@@ -113,7 +113,7 @@ def execute(action,args):
         if app not in ('notepad','calculator'): raise ValueError('Unsupported application.')
         before={w['handle'] for w in windows()};marker=None;arguments=[]
         if app=='notepad':
-            directory=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'.things-local','notes');os.makedirs(directory,exist_ok=True)
+            directory=os.path.join(os.environ.get('THINGS_DATA_DIR',os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'.things-local')),'notes');os.makedirs(directory,exist_ok=True)
             marker='THINGS Note '+str(uuid.uuid4())[:8];file=os.path.join(directory,marker+'.txt')
             with open(file,'x',encoding='utf-8'): pass
             arguments=[file]

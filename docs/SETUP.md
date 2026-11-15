@@ -1,5 +1,16 @@
 # Reviewer setup (Windows)
 
+## Easiest: Windows portable download
+
+Download the Windows x64 `.exe` from [GitHub Releases](https://github.com/KennyHacrt/THINGS/releases). Open it and complete **Connect your AI** on the first screen. Python, native desktop libraries and the local speech model are bundled; Node.js/Python installation is not required. Initial extraction can take a while. This is a Windows desktop application, not an APK or a browser-hosted desktop-control app.
+
+The binary is unsigned. Verify its SHA-256 against the release checksums. If your organisation blocks unsigned apps, follow its security policy or use the source instructions below; the project does not ask you to disable security protections.
+
+Choose **Poe**, or **Custom — OpenAI-compatible API** with your provider's documented Base URL, model ID and key. Saving does not make a request. The optional connection test uses credits. See [provider compatibility](PROVIDERS.md) for omg.dev/Habitect.ai findings and exact protocol requirements.
+
+The following instructions are for source builds.
+
+
 ## 1. Prerequisites
 
 Install Node.js 22.6 or newer, npm, and Python 3.11. In a new PowerShell window check:
@@ -29,7 +40,7 @@ No local project files, caches, recordings, model files or credentials from the 
 ## 3. Use your own Poe account and bot
 
 1. Open [Poe API keys](https://poe.com/api/keys) and generate your own API key. Review your account's available API balance.
-2. In THINGS, click the small **sliders/settings icon** at the top right of the desktop assistant. In the settings workspace find **A little intelligence**.
+2. In THINGS, use **Connect your AI** on first launch, or select **AI connection** on the desktop home screen. Select Poe.
 3. Set **Poe model / bot name** to `gpt-4.1-mini`, or another exact compatible bot ID.
 4. Paste **your own** Poe API key into the password field and click **Save connection**. The field is cleared after saving.
 5. Optionally press **Test connection (uses credits)**. This checks whether the bot returns a function call. It does not verify screenshot accuracy or task success.
@@ -39,7 +50,7 @@ No local project files, caches, recordings, model files or credentials from the 
 
 Yes, if your bot is available through Poe's API, accepts image input, and returns the requested structured function/tool calls. Enter its exact bot ID in the same model field and use your own Poe key. Ordinary chat-only or text-only bots cannot control THINGS. If the tool check fails, select a bot that supports these capabilities; do not assume a chat reply means tools are working. No automatic premium-model fallback is used.
 
-The provider is Poe only in this release. A direct key from another AI provider is not interchangeable with a Poe key. The repo owner does not receive your key or pay for your requests.
+Custom APIs are supported when they implement the documented image/tool-capable Chat Completions protocol. Keys are not interchangeable between providers. The repo owner does not receive your key or pay for your requests.
 
 ## 4. First task
 
@@ -78,3 +89,18 @@ The latest economical default has not had a full paid live workflow rerun; see [
 ## Key storage
 
 The encrypted key is stored in the current Windows user's Electron app-data folder, normally `%APPDATA%\things-companion\poe-settings.json`. It is outside the repo and is protected by OS-account encryption. Replacing the key in Settings updates it locally. Do not publish that file, screenshots of keys, `.env` files or private task captures. You can revoke a key in Poe's API-key page.
+
+
+## Rebuild the Windows download
+
+From Windows x64 with the source-build prerequisites:
+
+```powershell
+npm ci
+npm run desktop:setup
+npm run runtime:prepare
+$env:ELECTRON_BUILDER_COMPRESSION_LEVEL='1'
+npm run package:win
+```
+
+The portable executable is created under `release/`. Packaging copies only application files, an official app-local Python runtime, installed worker libraries and the public Whisper base model. It does not copy the app-data profile, API keys, notes or recordings. The app itself is unsigned. Contributor packaging requires internet to retrieve official build tools and the embedded Python archive; no model-provider request is part of this build.

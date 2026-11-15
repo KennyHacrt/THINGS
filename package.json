@@ -11,7 +11,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "desktop": "npm run build && electron .",
     "desktop:setup": "python -m venv .desktop-env && .desktop-env\\Scripts\\python.exe -m pip install -r requirements-desktop.txt && .desktop-env\\Scripts\\python.exe electron/voice_worker.py --prepare",
-    "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.cjs"
+    "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.cjs",
+    "runtime:prepare": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-runtime.ps1",
+    "package:win": "npm run build && electron-builder --win portable --x64 --publish never"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -24,6 +26,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^42.0.0",
+    "electron-builder": "^26.18.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5"
   }

@@ -24,3 +24,8 @@ Existing demo footage consists of separate task takes and time compression. Some
 ## Reviewer check
 
 Use your own key, a compatible image-and-tool-capable Poe bot, and a small public-page task. Observe actual page changes, inspect the result and stop on errors. The tool-call connection check uses credits and only checks tool calling. Request caps protect against endless loops but are not a monetary billing guarantee.
+
+
+## Packaging and provider adapter update
+
+38 offline tests pass after adding custom HTTPS Chat Completions routing, endpoint-bound keys and a first-launch connection form. These tests use local fixtures, not paid model calls. The Windows portable build bundles an app-local Python distribution, desktop libraries and the public Whisper base model; no developer key, app profile or task notes are included. See release notes for the exact binary smoke-test status. No direct omg.dev or Habitect.ai integration has been verified; see PROVIDERS.md.

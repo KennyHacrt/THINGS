@@ -15,7 +15,7 @@ class Agent {
   async start(prompt,scope,context=[]) {
     if(this.run) throw new Error('Another task is already running.');
     if(typeof prompt!=='string'||!prompt.trim()||prompt.length>4000) throw new Error('Enter a task of 1–4000 characters.');
-    const config=this.credentials.config();const key=this.credentials.key();if(!key) throw new Error('Connect Poe in settings first.');
+    const config=this.credentials.config();const key=this.credentials.key();if(!key) throw new Error('Connect an AI provider first.');
     const run={id:randomUUID(),controller:new AbortController(),paused:false,budget:{calls:0,maxCalls:20}};this.run=run;
     const deadline=setTimeout(()=>run.controller.abort(),10*60*1000);
     this.emit('started',{prompt,model:config.model,scope:scope.mode});
@@ -26,7 +26,7 @@ class Agent {
     try {
       for(let turn=0;turn<36;turn++) {
         await this.gate();this.emit('thinking',{turn:turn+1});this.onActivity({pose:'think',label:'Thinking…',busy:true});
-        const {message,usage}=await this.complete({key,model:config.model,messages,tools:availableTools(),budget:run.budget,toolChoice:mustAct&&!verifiedActions?'required':undefined,signal:run.controller.signal});
+        const {message,usage}=await this.complete({key,connection:config,model:config.model,messages,tools:availableTools(),budget:run.budget,toolChoice:mustAct&&!verifiedActions?'required':undefined,signal:run.controller.signal});
         await this.gate();this.emit('usage',{input:usage.prompt_tokens||0,output:usage.completion_tokens||0});messages.push(message);
         if(!message.tool_calls?.length) {
           if(mustAct&&!verifiedActions){if(actionRetries++<2){messages.push({role:'user',content:'This is an execution request, not a request for a text answer. You have not performed any verified navigation or input. Use the available computer/browser tools now. Do not paste remembered results or say you are waiting for instructions.'});continue;}throw new Error('No computer action was executed. The model answered without using the available tools. Please retry.');}

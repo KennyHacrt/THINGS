@@ -1,15 +1,17 @@
+export type AIConnection={configured:boolean;provider:'poe'|'custom';baseUrl:string;model:string;desktopAvailable?:boolean;voiceAvailable?:boolean};
 import type { HandPose } from './Hand';
 
 export type CompanionActivity = { cursorPhase?:'point'|'down'|'type'; pose: HandPose; label: string; motion: boolean; busy: boolean };
 export type DesktopBridge = {
   deskSpeak:(text:string)=>Promise<{accepted:boolean}>;
   deskEnable:()=>Promise<boolean>;
+  deskConnection:(open:boolean)=>void;
   deskSettings:()=>void;
   deskHide:()=>void;
   onDeskEvent:(callback:(event:AgentEvent & {role?:string;text?:string;speak?:boolean})=>void)=>()=>void;
   transcribeVoice:(audio:string,partial?:boolean)=>Promise<{text:string;language:string}>;
-  aiConfig:()=>Promise<{configured:boolean;model:string;desktopAvailable:boolean}>;
-  aiSave:(value:{apiKey?:string;model:string})=>Promise<{configured:boolean;model:string}>;
+  aiConfig:()=>Promise<AIConnection>;
+  aiSave:(value:{apiKey?:string;model:string;provider?:'poe'|'custom';baseUrl?:string})=>Promise<AIConnection>;
   aiTest:()=>Promise<{ok:boolean;model:string;message:string}>;
   desktopWindows:()=>Promise<{handle:number;title:string;app:string}[]>;
   agentStart:(task:{prompt:string;mode:'browser'|'desktop'|'both';handle:number|null;shareContext:boolean})=>Promise<{started:boolean}>;

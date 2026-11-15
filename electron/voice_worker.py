@@ -10,13 +10,13 @@ import wave
 os.environ.setdefault('HF_HUB_DISABLE_SYMLINKS_WARNING', '1')
 from faster_whisper import WhisperModel
 
-cache = Path(__file__).resolve().parent.parent / '.things-local' / 'models'
+cache = Path(os.environ.get('THINGS_DATA_DIR',str(Path(__file__).resolve().parent.parent / '.things-local'))) / 'models'
 model = None
 
 def load_model():
     global model
     if model is None:
-        model = WhisperModel('base', device='cpu', compute_type='int8', cpu_threads=4,
+        model = WhisperModel(os.environ.get('THINGS_MODEL_DIR','base'), device='cpu', compute_type='int8', cpu_threads=4,
                              download_root=str(cache))
     return model
 

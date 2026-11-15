@@ -1,0 +1,28 @@
+appId: dev.things.companion
+productName: THINGS
+artifactName: THINGS-${version}-Windows-${arch}.${ext}
+asar: true
+npmRebuild: false
+directories:
+  output: release
+files:
+  - dist/**
+  - electron/**
+  - public/thing-pointer.svg
+  - package.json
+extraResources:
+  - from: .runtime/python
+    to: python
+  - from: .runtime/models
+    to: models
+  - from: electron
+    to: workers
+    filter:
+      - '*_worker.py'
+win:
+  target:
+    - target: portable
+      arch: [x64]
+  signAndEditExecutable: false
+portable:
+  requestExecutionLevel: user

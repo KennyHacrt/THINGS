@@ -6,7 +6,9 @@ A Windows hackathon prototype: speak a task, watch an original stitched-hand cur
 
 ## For hackathon reviewers
 
-**Bring your own Poe API key and compatible Poe bot. No developer credentials are included.**
+**Bring your own API key and image/tool-capable model. No developer credentials are included.**
+
+For the Windows download, see [Releases](https://github.com/KennyHacrt/THINGS/releases). The portable build includes Python and the local speech model. Open the `.exe` and fill the first-launch connection form; no Node.js or Python installation is needed for that build.
 
 Read the [Windows setup and first-task guide](docs/SETUP.md), then the [validation status and limitations](docs/VALIDATION.md).
 
@@ -18,19 +20,19 @@ npm run desktop:setup
 npm run desktop
 ```
 
-Requires Windows 10/11, Node.js 22.6+ with npm, Python 3.11, a microphone, and internet access. Initial setup downloads dependencies and a local Whisper speech model. The current release runs from source; it is not a packaged installer.
+Requires Windows 10/11, Node.js 22.6+ with npm, Python 3.11, a microphone, and internet access. Initial setup downloads dependencies and a local Whisper speech model. These prerequisites are for building from source. The Windows portable release bundles its runtime.
 
 ## Connect your own AI
 
-1. Click the assistant's **settings/sliders** icon, then find **A little intelligence** in the settings workspace.
+1. On first launch, use the **Connect your AI** form on the desktop home screen. Later, select **AI connection**.
 2. Generate your own key at [Poe API keys](https://poe.com/api/keys).
-3. Enter that key and a Poe model/bot ID. The economical default is `gpt-4.1-mini`.
+3. Choose Poe and enter that key and a Poe model/bot ID. The economical default is `gpt-4.1-mini`.
 4. Click **Save connection**. **Test connection** is optional and makes a paid request to verify function calling.
 5. Return to the desktop assistant and click **Start conversation**, or press **Ctrl + Shift + Space**.
 
 A custom Poe bot can power THINGS only if it accepts screenshots and supports API function/tool calls. A text-only chatbot is insufficient. The connection test verifies tool calling, not end-to-end visual accuracy. Exact bot IDs are listed in [Poe's public model catalog](https://api.poe.com/v1/models).
 
-The current provider endpoint is fixed to `https://api.poe.com/v1/chat/completions`. Direct OpenAI, Anthropic, DeepSeek or other provider keys cannot be entered here. Access to models is billed to the reviewer’s own Poe account; a chat subscription does not imply unlimited API usage.
+Alternatively, choose **Custom — OpenAI-compatible API** and enter your provider’s HTTPS Base URL, model ID and matching key. See [provider compatibility](docs/PROVIDERS.md), including the unverified status of omg.dev and Habitect.ai. Data/MCP/sandbox APIs do not automatically work as model providers. Access to models is billed to the reviewer’s selected provider account; a chat subscription does not imply unlimited API usage.
 
 ## How it works
 
@@ -42,7 +44,7 @@ THINGS suspends recognition while speaking, discards in-flight transcripts, wait
 
 - You supply your own key through the local settings UI. Do not commit it or send it to the project author.
 - Electron `safeStorage` encrypts the key for your OS account in the app's user-data folder. It is never returned to the renderer. No `.env` key is required.
-- Voice audio is transcribed locally. Recognized text, conversation context and task-window screenshots are sent to Poe.
+- Voice audio is transcribed locally. Recognized text, conversation context and task-window screenshots are sent to the selected model provider.
 - Each task is limited to **20 AI requests**, including action checks. Each app process is limited to **30 total requests**. Requests stop before exceeding either cap; restarting the app resets the process cap.
 - Planning output is limited to 700 tokens, action-check output to 80. Only the latest screenshot is retained in context. There is no automatic switch to a premium model.
 - These are request limits, **not a guaranteed monetary spending cap**. Actual cost depends on Poe's token billing and chosen bot. Model quality and latency vary.

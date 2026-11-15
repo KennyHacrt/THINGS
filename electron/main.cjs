@@ -12,6 +12,8 @@ const {randomUUID}=require('node:crypto');
 const {LAYOUT,placement,ActionCursor}=require('./cursor.cjs');
 const path = require('node:path');
 app.disableHardwareAcceleration();
+const profile=process.argv.find(v=>v.startsWith('--things-profile='))?.slice('--things-profile='.length);if(profile&&path.isAbsolute(profile))app.setPath('userData',profile);
+process.env.THINGS_DATA_DIR=app.getPath('userData');
 let mainWindow, companionWindow, quickWindow, cursorTimer, dockWindow, tray;
 let deskEnabled=false,deskQueue=[],deskContext=[],deskStarting=false;
 let lastSent = '';
@@ -127,7 +129,7 @@ else {
       catch(e){deskContext=[...deskContext,{role:'user',content:prompt},{role:'assistant',content:'The previous task stopped without a verified completion: '+e.message}].slice(-6);if(!/abort|stopped/i.test(e.message))chat('assistant',e.message,true);}
       finally{deskStarting=false;if(deskQueue.length)setTimeout(()=>void workNext(),100);}
     }
-    ipcMain.handle('things:desk-enable',event=>{if(!isDock(event))throw new Error('Unavailable');if(!credentials.key())throw new Error('Connect Poe in settings first.');deskEnabled=true;openCompanion();return true;});
+    ipcMain.handle('things:desk-enable',event=>{if(!isDock(event))throw new Error('Unavailable');if(!credentials.key())throw new Error('Connect an AI provider first.');deskEnabled=true;openCompanion();return true;});
     ipcMain.handle('things:desk-speak',(event,text)=>{
       if(!isDock(event)||!deskEnabled)throw new Error('Start a voice conversation first.');
       if(typeof text!=='string'||!text.trim()||text.length>4000)throw new Error('Speak a shorter request.');
@@ -137,15 +139,16 @@ else {
       if(deskQueue.length>=3)throw new Error('I have three requests queued. Let me finish one first.');
       deskQueue.push(text);if(agent.run||deskStarting)chat('assistant','Got it. I’ll do that next.');void workNext();return {accepted:true};
     });
+    ipcMain.on('things:desk-connection',(event,open)=>{if(!isDock(event)||typeof open!=='boolean'||agent.run)return;const area=screen.getDisplayMatching(dockWindow.getBounds()).workArea,height=Math.min(open?760:475,area.height-32);dockWindow.setBounds({x:area.x+area.width-406,y:area.y+area.height-height-16,width:390,height});});
     ipcMain.on('things:desk-settings',event=>{if(isDock(event))openSettings();});
     ipcMain.on('things:desk-hide',event=>{if(isDock(event))dockWindow.hide();});
     ipcMain.handle('things:voice-transcribe',(event,audio,partial=false)=>{if(!isControl(event)&&event.sender!==quickWindow?.webContents)throw new Error('Unavailable');if(agent?.run&&!isDock(event))throw new Error('Finish or stop the current task before speaking another.');return voiceTools.transcribe(audio,partial===true);});
-    ipcMain.handle('things:ai-config',event=>{if(!isMain(event))throw new Error('Unavailable');return {...credentials.config(),desktopAvailable:desktopTools.available()};});
-    ipcMain.handle('things:ai-save',(event,value)=>{if(!isMain(event)||agent.run)throw new Error('Settings cannot change during a task.');return credentials.save(value||{});});
+    ipcMain.handle('things:ai-config',event=>{if(!isControl(event))throw new Error('Unavailable');return {...credentials.config(),desktopAvailable:desktopTools.available(),voiceAvailable:voiceTools.available()};});
+    ipcMain.handle('things:ai-save',(event,value)=>{if(!isControl(event)||agent.run||deskStarting)throw new Error('Settings cannot change during a task.');return credentials.save(value||{});});
     ipcMain.handle('things:ai-test',async event=>{
-      if(!isMain(event)||agent.run)throw new Error('Finish the current task first.');
-      const result=await completion({key:credentials.key(),model:credentials.config().model,messages:[{role:'system',content:'Call connection_check with marker READY. This is a tool API diagnostic.'},{role:'user',content:'Run connection_check now.'}],tools:[{type:'function',function:{name:'connection_check',description:'Verify tool calling.',parameters:{type:'object',properties:{marker:{type:'string'}},required:['marker'],additionalProperties:false}}}]});
-      if(!result.message.tool_calls?.some(c=>c.function.name==='connection_check'))throw new Error('Poe responded, but this model did not pass the tool-calling capability check. Choose another model.');
+      if(!isControl(event)||agent.run||deskStarting)throw new Error('Finish the current task first.');
+      const result=await completion({key:credentials.key(),connection:credentials.config(),model:credentials.config().model,messages:[{role:'system',content:'Call connection_check with marker READY. This is a tool API diagnostic.'},{role:'user',content:'Run connection_check now.'}],tools:[{type:'function',function:{name:'connection_check',description:'Verify tool calling.',parameters:{type:'object',properties:{marker:{type:'string'}},required:['marker'],additionalProperties:false}}}]});
+      if(!result.message.tool_calls?.some(c=>c.function.name==='connection_check'))throw new Error('The provider responded, but this model did not pass the tool-calling capability check. Choose another model.');
       return {ok:true,model:credentials.config().model,message:'Tool calling verified.'};
     });
     ipcMain.handle('things:desktop-windows',async event=>{if(!isMain(event)||agent.run)throw new Error('Unavailable during a task.');return desktopTools.request('list');});
@@ -153,7 +156,7 @@ else {
       if(!isMain(event)||!['browser','desktop','both'].includes(mode)||shareContext!==true)throw new Error('Allow sharing task context with Poe before starting.');
       if(agent.run||activity.busy)throw new Error('A task is already running.');
       if(typeof prompt!=='string'||!prompt.trim()||prompt.length>4000)throw new Error('Enter a task of 1–4000 characters.');
-      if(!credentials.key())throw new Error('Connect Poe in settings first.');
+      if(!credentials.key())throw new Error('Connect an AI provider first.');
       if(handle!==null&&handle!==undefined){
         const windows=await desktopTools.request('list');if(!windows.some(w=>w.handle===handle))throw new Error('Choose an available desktop window.');
       }

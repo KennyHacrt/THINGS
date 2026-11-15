@@ -3,6 +3,7 @@ contextBridge.exposeInMainWorld('thingsDesktop', {
   transcribeVoice:(audio,partial=false)=>ipcRenderer.invoke('things:voice-transcribe',audio,partial),
   deskSpeak:text=>ipcRenderer.invoke('things:desk-speak',text),
   deskEnable:()=>ipcRenderer.invoke('things:desk-enable'),
+  deskConnection:open=>ipcRenderer.send('things:desk-connection',open),
   deskSettings:()=>ipcRenderer.send('things:desk-settings'),
   deskHide:()=>ipcRenderer.send('things:desk-hide'),
   onDeskEvent:callback=>{const listener=(_e,data)=>callback(data);ipcRenderer.on('things:desk-event',listener);return()=>ipcRenderer.removeListener('things:desk-event',listener);},
